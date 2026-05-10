@@ -1,0 +1,16 @@
+id: web_dev_cluster
+name: Web Development
+type: cluster
+author: core-team
+version: 1.0.0
+description: "Entry cluster for web development tasks. Backend, frontend, security, APIs."
+priority: 1
+edges:
+  - to: software_engineer
+    type: enables
+  - to: security
+    type: enables
+  - to: frontend_dev
+    type: enables
+  - to: tech_lead
+    type: enables

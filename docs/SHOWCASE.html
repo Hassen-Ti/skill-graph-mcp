@@ -1,0 +1,593 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Skill Graph MCP — GraphRAG for Claude</title>
+<style>
+  :root {
+    --bg: #0d1117;
+    --surface: #161b22;
+    --surface2: #21262d;
+    --border: #30363d;
+    --accent: #58a6ff;
+    --accent2: #7ee787;
+    --accent3: #f78166;
+    --text: #e6edf3;
+    --muted: #8b949e;
+    --purple: #bc8cff;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    line-height: 1.6;
+  }
+
+  /* Hero */
+  .hero {
+    max-width: 860px;
+    margin: 0 auto;
+    padding: 80px 24px 48px;
+    text-align: center;
+  }
+  .badge {
+    display: inline-block;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    padding: 4px 14px;
+    font-size: 12px;
+    color: var(--accent);
+    margin-bottom: 24px;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+  }
+  h1 {
+    font-size: clamp(28px, 5vw, 52px);
+    font-weight: 700;
+    letter-spacing: -0.02em;
+    margin-bottom: 20px;
+    background: linear-gradient(135deg, var(--text) 0%, var(--accent) 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+  .tagline {
+    font-size: clamp(16px, 2.5vw, 20px);
+    color: var(--muted);
+    max-width: 580px;
+    margin: 0 auto 40px;
+  }
+
+  /* Stats row */
+  .stats {
+    display: flex;
+    justify-content: center;
+    gap: 32px;
+    flex-wrap: wrap;
+    margin-bottom: 60px;
+  }
+  .stat {
+    text-align: center;
+  }
+  .stat-num {
+    font-size: 36px;
+    font-weight: 700;
+    color: var(--accent);
+    display: block;
+  }
+  .stat-label {
+    font-size: 13px;
+    color: var(--muted);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+  }
+
+  /* Flow demo */
+  .section {
+    max-width: 860px;
+    margin: 0 auto;
+    padding: 0 24px 72px;
+  }
+  .section-title {
+    font-size: 13px;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: var(--accent);
+    margin-bottom: 24px;
+    font-weight: 600;
+  }
+
+  .flow {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    overflow: hidden;
+  }
+  .flow-header {
+    background: var(--surface2);
+    border-bottom: 1px solid var(--border);
+    padding: 12px 20px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .dot { width: 12px; height: 12px; border-radius: 50%; }
+  .dot-red { background: #f78166; }
+  .dot-yellow { background: #e3b341; }
+  .dot-green { background: #7ee787; }
+  .flow-title { font-size: 13px; color: var(--muted); margin-left: 8px; }
+
+  .flow-body { padding: 24px 20px; }
+  .msg { margin-bottom: 20px; }
+  .msg-label {
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    margin-bottom: 6px;
+    font-weight: 600;
+  }
+  .msg-user .msg-label { color: var(--accent2); }
+  .msg-claude .msg-label { color: var(--purple); }
+  .msg-mcp .msg-label { color: var(--accent); }
+
+  .bubble {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 12px 16px;
+    font-size: 14px;
+  }
+  .msg-user .bubble { border-color: var(--accent2); }
+  .msg-mcp .bubble {
+    font-family: 'SF Mono', 'Fira Code', monospace;
+    font-size: 13px;
+  }
+
+  .arrow {
+    text-align: center;
+    color: var(--border);
+    font-size: 20px;
+    margin: 4px 0;
+  }
+
+  .score { color: var(--accent); font-weight: 600; }
+  .skill-id { color: var(--accent2); }
+  .tool-call { color: var(--purple); }
+
+  /* Architecture */
+  .arch-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+    gap: 16px;
+  }
+  .arch-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 20px;
+    transition: border-color 0.2s;
+  }
+  .arch-card:hover { border-color: var(--accent); }
+  .arch-icon { font-size: 28px; margin-bottom: 12px; }
+  .arch-name { font-size: 15px; font-weight: 600; margin-bottom: 6px; }
+  .arch-desc { font-size: 13px; color: var(--muted); line-height: 1.5; }
+
+  /* Graph visualization teaser */
+  .graph-canvas {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    height: 280px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+    overflow: hidden;
+  }
+  .node-demo {
+    position: absolute;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 10px;
+    font-weight: 600;
+    color: white;
+    transition: transform 0.3s;
+    cursor: default;
+  }
+  .node-demo:hover { transform: scale(1.2); }
+
+  svg.edges { position: absolute; width: 100%; height: 100%; }
+  svg.edges line { stroke: var(--border); stroke-width: 1.5; }
+
+  .legend {
+    display: flex;
+    gap: 20px;
+    flex-wrap: wrap;
+    margin-top: 16px;
+  }
+  .legend-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 12px;
+    color: var(--muted);
+  }
+  .legend-dot { width: 10px; height: 10px; border-radius: 50%; }
+
+  /* Tools */
+  .tools-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 12px;
+  }
+  .tool-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 18px;
+  }
+  .tool-name {
+    font-family: 'SF Mono', 'Fira Code', monospace;
+    font-size: 13px;
+    color: var(--purple);
+    margin-bottom: 8px;
+    font-weight: 600;
+  }
+  .tool-desc { font-size: 13px; color: var(--muted); }
+
+  /* CTA */
+  .cta {
+    text-align: center;
+    padding: 60px 24px 80px;
+    max-width: 600px;
+    margin: 0 auto;
+  }
+  .cta h2 { font-size: 28px; margin-bottom: 16px; }
+  .cta p { color: var(--muted); margin-bottom: 32px; }
+  .btn {
+    display: inline-block;
+    padding: 12px 28px;
+    border-radius: 8px;
+    font-size: 15px;
+    font-weight: 600;
+    text-decoration: none;
+    transition: opacity 0.2s;
+  }
+  .btn:hover { opacity: 0.85; }
+  .btn-primary { background: var(--accent); color: #0d1117; }
+  .btn-secondary {
+    background: transparent;
+    border: 1px solid var(--border);
+    color: var(--text);
+    margin-left: 12px;
+  }
+
+  /* Divider */
+  hr { border: none; border-top: 1px solid var(--border); margin: 0; }
+
+  /* Pipeline */
+  .pipeline {
+    display: flex;
+    gap: 0;
+    overflow-x: auto;
+    padding-bottom: 8px;
+  }
+  .pipeline-step {
+    flex: 1;
+    min-width: 140px;
+    text-align: center;
+    position: relative;
+  }
+  .pipeline-step::after {
+    content: '→';
+    position: absolute;
+    right: -8px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: var(--border);
+    font-size: 20px;
+  }
+  .pipeline-step:last-child::after { display: none; }
+  .step-box {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 14px 10px;
+    margin: 0 16px;
+    height: 100%;
+  }
+  .step-num {
+    font-size: 11px;
+    color: var(--accent);
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    margin-bottom: 6px;
+    font-weight: 600;
+  }
+  .step-name { font-size: 13px; font-weight: 600; margin-bottom: 4px; }
+  .step-detail { font-size: 11px; color: var(--muted); }
+</style>
+</head>
+<body>
+
+<!-- ── HERO ───────────────────────────────────────────────────────────────── -->
+<div class="hero">
+  <div class="badge">Open Source · v1.0</div>
+  <h1>Skill Graph MCP</h1>
+  <p class="tagline">
+    A GraphRAG knowledge base that gives Claude autonomous access to 732 expert skills —
+    no manual installation, no copy-paste.
+  </p>
+
+  <div class="stats">
+    <div class="stat">
+      <span class="stat-num">732</span>
+      <span class="stat-label">Skills in graph</span>
+    </div>
+    <div class="stat">
+      <span class="stat-num">3,364</span>
+      <span class="stat-label">Semantic edges</span>
+    </div>
+    <div class="stat">
+      <span class="stat-num">0.73+</span>
+      <span class="stat-label">Avg search score</span>
+    </div>
+    <div class="stat">
+      <span class="stat-num">&lt;500ms</span>
+      <span class="stat-label">Search latency</span>
+    </div>
+  </div>
+</div>
+
+<hr>
+
+<!-- ── FLOW DEMO ──────────────────────────────────────────────────────────── -->
+<div class="section" style="padding-top:60px">
+  <div class="section-title">Live example</div>
+  <div class="flow">
+    <div class="flow-header">
+      <div class="dot dot-red"></div>
+      <div class="dot dot-yellow"></div>
+      <div class="dot dot-green"></div>
+      <span class="flow-title">Claude Desktop — Skill Graph MCP connected</span>
+    </div>
+    <div class="flow-body">
+
+      <div class="msg msg-user">
+        <div class="msg-label">You</div>
+        <div class="bubble">I want to build a real-time e-commerce site with Stripe payments and Next.js</div>
+      </div>
+
+      <div class="arrow">↓</div>
+
+      <div class="msg msg-mcp">
+        <div class="msg-label">MCP → search_skills()</div>
+        <div class="bubble">
+          query: <span class="tool-call">"e-commerce Stripe payments Next.js"</span><br><br>
+          → <span class="skill-id">stripe-integration</span> <span class="score">[0.731]</span><br>
+          → <span class="skill-id">payment-integration</span> <span class="score">[0.746]</span><br>
+          → <span class="skill-id">paypal-integration</span> <span class="score">[0.756]</span>
+        </div>
+      </div>
+
+      <div class="arrow">↓</div>
+
+      <div class="msg msg-mcp">
+        <div class="msg-label">MCP → get_skill("stripe-integration")</div>
+        <div class="bubble">
+          Loaded: Stripe checkout, webhooks, subscriptions, PCI compliance<br>
+          + 3 layer-1 neighbors: <span class="skill-id">pci-compliance</span>, <span class="skill-id">payment-integration</span>, <span class="skill-id">paypal-integration</span>
+        </div>
+      </div>
+
+      <div class="arrow">↓</div>
+
+      <div class="msg msg-claude">
+        <div class="msg-label">Claude (with expert context)</div>
+        <div class="bubble">
+          Here's your production-ready stack:<br><br>
+          <strong>Frontend:</strong> Next.js 14 App Router + Stripe.js (Elements)<br>
+          <strong>Backend:</strong> Next.js API routes + Stripe SDK + webhook handler<br>
+          <strong>Checkout:</strong> Stripe Checkout Session (hosted, minimal PCI burden)<br>
+          <strong>Webhooks:</strong> <code>payment_intent.succeeded</code>, <code>customer.subscription.deleted</code><br><br>
+          Let me show you the full implementation...
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<!-- ── GRAPH VIZ ──────────────────────────────────────────────────────────── -->
+<div class="section">
+  <div class="section-title">The knowledge graph</div>
+  <div class="graph-canvas" id="graphCanvas">
+    <svg class="edges" id="edgesSvg"></svg>
+  </div>
+  <div class="legend">
+    <div class="legend-item">
+      <div class="legend-dot" style="background:#58a6ff"></div> Archetype (role)
+    </div>
+    <div class="legend-item">
+      <div class="legend-dot" style="background:#7ee787"></div> Domain skill
+    </div>
+    <div class="legend-item">
+      <div class="legend-dot" style="background:#f78166"></div> Tool skill
+    </div>
+    <div class="legend-item">
+      <div class="legend-dot" style="background:#bc8cff"></div> Cluster
+    </div>
+  </div>
+</div>
+
+<!-- ── PIPELINE ───────────────────────────────────────────────────────────── -->
+<div class="section">
+  <div class="section-title">How the graph was built</div>
+  <div class="pipeline">
+    <div class="pipeline-step">
+      <div class="step-box">
+        <div class="step-num">Sprint 1</div>
+        <div class="step-name">Convert</div>
+        <div class="step-detail">713 SKILL.md → YAML<br>107 explicit edges</div>
+      </div>
+    </div>
+    <div class="pipeline-step">
+      <div class="step-box">
+        <div class="step-num">Sprint 2</div>
+        <div class="step-name">Embed</div>
+        <div class="step-detail">OpenAI embeddings<br>2,865 semantic edges</div>
+      </div>
+    </div>
+    <div class="pipeline-step">
+      <div class="step-box">
+        <div class="step-num">Sprint 3</div>
+        <div class="step-name">Connect</div>
+        <div class="step-detail">Archetypes → skills<br>138 enables edges</div>
+      </div>
+    </div>
+    <div class="pipeline-step">
+      <div class="step-box">
+        <div class="step-num">Sprint 4</div>
+        <div class="step-name">Load</div>
+        <div class="step-detail">Neo4j 5.x<br>732 nodes · vector index</div>
+      </div>
+    </div>
+    <div class="pipeline-step">
+      <div class="step-box">
+        <div class="step-num">Sprint 5</div>
+        <div class="step-name">Ship</div>
+        <div class="step-detail">MCP server<br>4 tools · live</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ── TOOLS ─────────────────────────────────────────────────────────────── -->
+<div class="section">
+  <div class="section-title">4 MCP Tools</div>
+  <div class="tools-grid">
+    <div class="tool-card">
+      <div class="tool-name">search_skills(query)</div>
+      <div class="tool-desc">Semantic search over 732 skills. Returns top-3 with score. ~200ms.</div>
+    </div>
+    <div class="tool-card">
+      <div class="tool-name">get_skill(id, depth)</div>
+      <div class="tool-desc">Full expert context — instructions, tools, neighbors. Rate-limited: 10/session.</div>
+    </div>
+    <div class="tool-card">
+      <div class="tool-name">navigate(id, type)</div>
+      <div class="tool-desc">Traverse graph edges: REQUIRES, ENABLES, COLLABORATES_WITH…</div>
+    </div>
+    <div class="tool-card">
+      <div class="tool-name">get_knowledge(ref)</div>
+      <div class="tool-desc">Read knowledge-base documents. Path-confined, extension-whitelisted.</div>
+    </div>
+  </div>
+</div>
+
+<!-- ── ARCH ───────────────────────────────────────────────────────────────── -->
+<div class="section">
+  <div class="section-title">Stack</div>
+  <div class="arch-grid">
+    <div class="arch-card">
+      <div class="arch-icon">🧠</div>
+      <div class="arch-name">FastMCP (Python)</div>
+      <div class="arch-desc">MCP server framework. stdio transport. 4 tools. Session rate limiting.</div>
+    </div>
+    <div class="arch-card">
+      <div class="arch-icon">🔗</div>
+      <div class="arch-name">Neo4j 5.x</div>
+      <div class="arch-desc">Graph database with native vector index. 732 nodes, 3,364 edges, hub_score centrality.</div>
+    </div>
+    <div class="arch-card">
+      <div class="arch-icon">⚡</div>
+      <div class="arch-name">OpenAI Embeddings</div>
+      <div class="arch-desc">text-embedding-3-small (1536 dims). Query embedding at runtime. ~$0.000002/search.</div>
+    </div>
+    <div class="arch-card">
+      <div class="arch-icon">🔌</div>
+      <div class="arch-name">MCP Protocol</div>
+      <div class="arch-desc">Native integration with Claude Desktop & Claude Code. Zero user configuration at runtime.</div>
+    </div>
+  </div>
+</div>
+
+<!-- ── CTA ────────────────────────────────────────────────────────────────── -->
+<hr>
+<div class="cta">
+  <h2>Try it yourself</h2>
+  <p>Self-hosted, local-first. Neo4j runs in Docker. Your skills, your graph, your Claude.</p>
+  <a href="https://github.com/YOUR_USERNAME/skill-graph-mcp" class="btn btn-primary">View on GitHub</a>
+  <a href="docs/USER_GUIDE.md" class="btn btn-secondary">User Guide</a>
+</div>
+
+<script>
+// Animate graph nodes
+const canvas = document.getElementById('graphCanvas');
+const svg = document.getElementById('edgesSvg');
+
+const nodes = [
+  { label: 'SW Eng', color: '#58a6ff', size: 28, x: 50, y: 50 },
+  { label: 'Security', color: '#58a6ff', size: 24, x: 80, y: 30 },
+  { label: 'Data', color: '#58a6ff', size: 22, x: 20, y: 30 },
+  { label: 'stripe', color: '#7ee787', size: 18, x: 65, y: 70 },
+  { label: 'react', color: '#7ee787', size: 16, x: 35, y: 65 },
+  { label: 'docker', color: '#f78166', size: 16, x: 55, y: 80 },
+  { label: 'k8s', color: '#f78166', size: 14, x: 75, y: 78 },
+  { label: 'nextjs', color: '#7ee787', size: 14, x: 22, y: 55 },
+  { label: 'jwt', color: '#7ee787', size: 14, x: 85, y: 55 },
+  { label: 'core-dev', color: '#bc8cff', size: 20, x: 10, y: 70 },
+  { label: 'sec-core', color: '#bc8cff', size: 18, x: 88, y: 18 },
+  { label: 'airflow', color: '#7ee787', size: 12, x: 10, y: 45 },
+  { label: 'xss', color: '#f78166', size: 12, x: 92, y: 42 },
+];
+
+const edges = [
+  [0,3],[0,4],[0,5],[0,7],[0,8],
+  [1,8],[1,12],[1,10],
+  [2,11],[2,4],[2,9],
+  [3,6],[4,7],[5,6],
+  [0,1],[0,2]
+];
+
+const rect = canvas.getBoundingClientRect();
+const W = canvas.offsetWidth;
+const H = canvas.offsetHeight;
+
+// Draw edges
+edges.forEach(([a, b]) => {
+  const na = nodes[a], nb = nodes[b];
+  const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+  line.setAttribute('x1', na.x / 100 * W);
+  line.setAttribute('y1', na.y / 100 * H);
+  line.setAttribute('x2', nb.x / 100 * W);
+  line.setAttribute('y2', nb.y / 100 * H);
+  svg.appendChild(line);
+});
+
+// Draw nodes
+nodes.forEach(n => {
+  const el = document.createElement('div');
+  el.className = 'node-demo';
+  el.textContent = n.label;
+  el.style.cssText = [
+    `width:${n.size * 2 + 16}px`,
+    `height:${n.size * 2 + 8}px`,
+    `left:${n.x / 100 * W - (n.size + 8)}px`,
+    `top:${n.y / 100 * H - (n.size + 4)}px`,
+    `background:${n.color}22`,
+    `border:1.5px solid ${n.color}`,
+    `color:${n.color}`,
+    `font-size:${Math.max(9, n.size * 0.5)}px`
+  ].join(';');
+  canvas.appendChild(el);
+});
+</script>
+
+</body>
+</html>

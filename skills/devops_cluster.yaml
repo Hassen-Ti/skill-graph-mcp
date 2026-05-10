@@ -1,0 +1,12 @@
+id: devops_cluster
+name: DevOps & Reliability
+type: cluster
+author: core-team
+version: 1.0.0
+description: "Entry cluster for DevOps and site reliability engineering. CI/CD, infrastructure, observability, and incident management."
+priority: 1
+edges:
+  - to: devops_engineer
+    type: enables
+  - to: sre
+    type: enables

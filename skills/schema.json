@@ -1,0 +1,45 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "required": ["id", "name", "type", "author", "version", "description"],
+  "additionalProperties": false,
+  "properties": {
+    "id": { "type": "string", "pattern": "^[a-z0-9_-]+$" },
+    "name": { "type": "string", "minLength": 1 },
+    "type": {
+      "type": "string",
+      "enum": ["role", "tool", "domain", "responsibility", "cluster"]
+    },
+    "author": { "type": "string" },
+    "version": { "type": "string", "pattern": "^\\d+\\.\\d+\\.\\d+$" },
+    "description": { "type": "string", "minLength": 1, "maxLength": 500 },
+    "priority": { "type": "integer", "minimum": 1, "maximum": 3 },
+    "extends": { "type": "string" },
+    "prerequisites": { "type": "array", "items": { "type": "string" } },
+    "edges": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["to", "type"],
+        "additionalProperties": false,
+        "properties": {
+          "to": { "type": "string" },
+          "type": {
+            "type": "string",
+            "enum": ["requires", "enables", "collaborates_with", "uses", "part_of", "extends"]
+          }
+        }
+      }
+    },
+    "payload": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "instructions": { "type": "string" },
+        "tools": { "type": "array", "items": { "type": "string" } },
+        "exclude_tools": { "type": "array", "items": { "type": "string" } },
+        "knowledge": { "type": "array", "items": { "type": "string" } }
+      }
+    }
+  }
+}

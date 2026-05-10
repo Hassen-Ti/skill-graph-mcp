@@ -1,0 +1,12 @@
+id: data_cluster
+name: Data & ML
+type: cluster
+author: core-team
+version: 1.0.0
+description: "Entry cluster for data engineering and machine learning work. Pipelines, warehouses, model training, and inference."
+priority: 1
+edges:
+  - to: data_engineer
+    type: enables
+  - to: ml_engineer
+    type: enables
