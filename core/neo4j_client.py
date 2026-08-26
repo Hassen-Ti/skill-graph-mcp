@@ -146,6 +146,41 @@ class Neo4jClient:
             {"id": skill_id, "embedding": embedding},
         )
 
+    async def get_all_skill_embeddings(self) -> dict[str, list[float]]:
+        records = await self._run(
+            "MATCH (s:Skill) WHERE s.embedding IS NOT NULL RETURN s.id AS id, s.embedding AS embedding"
+        )
+        return {r["id"]: r["embedding"] for r in records}
+
+    async def vector_knn(self, embedding: list[float], k: int) -> list[dict]:
+        return await self._run(
+            f"CALL db.index.vector.queryNodes($index, $k, $embedding) "
+            f"YIELD node, score "
+            f"RETURN node.id AS id, score AS semantic_score",
+            {"index": VECTOR_INDEX_NAME, "k": k, "embedding": embedding},
+        )
+
+    async def edge_exists(self, from_id: str, to_id: str) -> bool:
+        records = await self._run(
+            "MATCH (a:Skill {id: $from_id}), (b:Skill {id: $to_id}) "
+            "RETURN EXISTS { (a)-[]-(b) } AS exists",
+            {"from_id": from_id, "to_id": to_id},
+        )
+        return bool(records and records[0]["exists"])
+
+    async def similarity_edge_exists_or_create(self, from_id: str, to_id: str, score: float) -> bool:
+        records = await self._run(
+            "MATCH (a:Skill {id: $from_id}), (b:Skill {id: $to_id}) "
+            "WHERE NOT EXISTS { (a)-[]-(b) } "
+            "CREATE (a)-[r:COLLABORATES_WITH {source: 'similarity', score: $score}]->(b) "
+            "RETURN r",
+            {"from_id": from_id, "to_id": to_id, "score": score},
+        )
+        return len(records) > 0
+
+    async def delete_similarity_edges(self) -> None:
+        await self._run("MATCH ()-[r:COLLABORATES_WITH {source: 'similarity'}]->() DELETE r")
+
     async def recompute_hub_scores(self) -> None:
         await self._run("""
         MATCH (s:Skill)
