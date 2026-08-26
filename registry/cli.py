@@ -35,7 +35,7 @@ async def _run_load(skills_dir: Path, schema_path: Path, dry_run: bool) -> None:
         print(f"Validated {len(yaml_files)} skills OK.")
         return
     from neo4j import AsyncGraphDatabase
-    from server.graph.neo4j_client import Neo4jClient
+    from core.neo4j_client import Neo4jClient
     uri = os.getenv("NEO4J_URI", "bolt://localhost:7687")
     user = os.getenv("NEO4J_USER", "neo4j")
     password = os.getenv("NEO4J_PASSWORD", "skillgraph")
@@ -53,7 +53,7 @@ async def _run_load(skills_dir: Path, schema_path: Path, dry_run: bool) -> None:
 
 async def _run_reindex() -> None:
     from neo4j import AsyncGraphDatabase
-    from server.graph.neo4j_client import Neo4jClient
+    from core.neo4j_client import Neo4jClient
     uri = os.getenv("NEO4J_URI", "bolt://localhost:7687")
     user = os.getenv("NEO4J_USER", "neo4j")
     password = os.getenv("NEO4J_PASSWORD", "skillgraph")

@@ -5,7 +5,7 @@ from typing import TYPE_CHECKING
 from server.models.skill_node import NeighborMetadata, SkillContextObject, SkillNodeMetadata, SkillPayload
 
 if TYPE_CHECKING:
-    from server.graph.neo4j_client import Neo4jClient
+    from core.neo4j_client import Neo4jClient
 
 logger = logging.getLogger(__name__)
 

@@ -1,15 +1,17 @@
-# server/graph/neo4j_client.py
+# core/neo4j_client.py
 from __future__ import annotations
 import json
 import logging
 from typing import Any
 from neo4j import AsyncDriver
 
+from core.embeddings import EMBEDDING_DIMS, INDEX_NAME
+
 logger = logging.getLogger(__name__)
 
 SKILL_LABEL = "Skill"
-VECTOR_INDEX_NAME = "skill_description_embedding"
-VECTOR_DIMENSIONS = 3072  # text-embedding-3-large
+VECTOR_INDEX_NAME = INDEX_NAME
+VECTOR_DIMENSIONS = EMBEDDING_DIMS
 
 
 class Neo4jClient:
@@ -136,6 +138,12 @@ class Neo4jClient:
         await self._run(
             "MATCH (s:Skill {id: $id}) SET s.payload_json = $payload_json",
             {"id": skill_id, "payload_json": json.dumps(payload)},
+        )
+
+    async def set_skill_embedding(self, skill_id: str, embedding: list[float]) -> None:
+        await self._run(
+            "MATCH (s:Skill {id: $id}) SET s.embedding = $embedding",
+            {"id": skill_id, "embedding": embedding},
         )
 
     async def recompute_hub_scores(self) -> None:

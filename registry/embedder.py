@@ -49,7 +49,7 @@ def save_index_metadata(metadata: dict[str, str]) -> None:
 
 
 async def update_embeddings(client: Any, registry: dict[str, dict]) -> None:
-    from server.search.vector_search import update_skill_embedding
+    from core.embeddings import embed_text as compute_embedding
     try:
         records = await client._run("MATCH (s:Skill) WHERE s.embedding IS NOT NULL RETURN s.id AS id")
         embedded_in_graph: set[str] = {r["id"] for r in records}
@@ -63,7 +63,8 @@ async def update_embeddings(client: Any, registry: dict[str, dict]) -> None:
         current_hash = _hash_content(embed_text)
         if current_hash == stored_metadata.get(skill_id) and skill_id in embedded_in_graph:
             continue
-        await update_skill_embedding(client, skill_id, embed_text)
+        embedding = await compute_embedding(embed_text)
+        await client.set_skill_embedding(skill_id, embedding)
         updated_metadata[skill_id] = current_hash
         updated_count += 1
     save_index_metadata(updated_metadata)

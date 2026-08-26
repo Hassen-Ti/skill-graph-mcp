@@ -16,7 +16,7 @@ from pathlib import Path
 
 from mcp.server.fastmcp import FastMCP
 
-from server.graph.neo4j_client import Neo4jClient
+from core.neo4j_client import Neo4jClient
 from server.graph.traversal import build_skill_context_object
 from server.models.skill_node import NeighborMetadata, SkillCandidate, SkillContextObject
 from server.search.vector_search import search_skills as search_skills_impl
