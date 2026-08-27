@@ -10,7 +10,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass, field
 
-GET_SKILL_RATE_LIMIT: int = 10
+CONTEXT_BUDGET_TOKENS: int = 60000
 ACTIVE_TOOL_CAP: int = 15
 
 
@@ -18,7 +18,7 @@ ACTIVE_TOOL_CAP: int = 15
 class SessionState:
     """Tracks per-session usage for the MCP server."""
 
-    get_skill_calls: int = 0
+    total_context_cost: int = 0
     visited_nodes: set[str] = field(default_factory=set)
     active_tools: list[str] = field(default_factory=list)
 
