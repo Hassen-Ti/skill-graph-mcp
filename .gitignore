@@ -8,6 +8,7 @@
 # server loads, not a build artifact. Only the embedder's incremental-update
 # cache stays ignored.
 index_metadata.json
+staging/conversion_report.json
 
 # Viz — generated files (rebuild with enrich_semantic.py + build_html.py)
 viz/graph.json

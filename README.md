@@ -119,26 +119,39 @@ docker-compose up -d
 
 ### 4. Build the knowledge graph
 
-> **Known gap:** this repo does not currently include the enriched skill YAMLs
-> (`staging/skills/*.yaml`) or a working SKILL.md → YAML conversion pipeline —
-> both were removed from version control. To run this step today you need
-> your own directory of skill YAMLs matching `skills/schema.json`. Fixing this
-> reproducibility gap is tracked as an open item, not solved by this README.
+`staging/skills/` ships in this repo (701 already-enriched YAMLs) — no external dependency needed for this step:
 
 ```bash
 # 1 — (Re)create the Neo4j vector index (run once, or after changing dims)
 python -m registry.cli reindex
 
-# 2 — Load your skill YAMLs into Neo4j and generate embeddings
-python -m registry.cli load path/to/your/skills/ --schema skills/schema.json
+# 2 — Load the skill YAMLs into Neo4j and generate embeddings
+python -m registry.cli load staging/skills/ --schema skills/schema.json
 
 # 3 — Optional: auto-generate COLLABORATES_WITH edges from embedding similarity,
-#     on top of whatever edges are already curated in your YAMLs
+#     on top of the edges already curated in the YAMLs
 python -m registry.cli link --dry-run   # inspect the count first
 python -m registry.cli link             # write them
 ```
 
 See [`registry.cli` reference](#registrycli-reference) below for all three commands.
+
+#### Refreshing from the raw skill library (optional)
+
+`staging/skills/` is a compiled artifact. To regenerate it from the original
+`SKILL.md` source library (e.g. after pulling upstream updates), clone
+[antigravity-awesome-skills](https://github.com/sickn33/antigravity-awesome-skills)
+somewhere, point `SKILLS_LIB_PATH` at its `skills/` folder, then:
+
+```bash
+export SKILLS_LIB_PATH=/path/to/antigravity-awesome-skills/skills
+python -m pipeline.enrich_skills --dry-run   # preview changes first
+python -m pipeline.enrich_skills --clean     # write + drop orphaned/inlined YAMLs
+```
+
+This only touches `description` and `payload.instructions` on existing
+skills — curated `edges`, `type`, `priority`, and `author` are preserved.
+Re-run `registry.cli load` afterward to push the changes into Neo4j.
 
 ### 5. Connect to Claude
 
