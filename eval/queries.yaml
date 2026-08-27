@@ -1,0 +1,67 @@
+# eval/queries.yaml
+# Hand-picked queries with expected-relevant skill IDs (verified to exist in
+# staging/skills/ at the time this file was written). Used by run_eval.py to
+# compute Precision@5 / MRR against the live vector index. Extend this list
+# as the corpus grows — it's the yardstick for any change touching
+# embeddings, similarity edges, or graph structure.
+
+- query: build a stripe payment integration for an e-commerce site
+  expected_ids: [stripe-integration, payment-integration]
+- query: automate recurring billing and subscriptions with stripe
+  expected_ids: [stripe-automation, stripe-integration]
+- query: design a REST API with consistent conventions
+  expected_ids: [api-design-principles]
+- query: protect an API against common security vulnerabilities
+  expected_ids: [api-security-best-practices]
+- query: review a kubernetes cluster's security policies
+  expected_ids: [k8s-security-policies]
+- query: architect a production kubernetes deployment
+  expected_ids: [kubernetes-architect]
+- query: write terraform modules for reusable infrastructure
+  expected_ids: [terraform-module-library, terraform-skill, terraform-specialist]
+- query: optimize postgresql query performance
+  expected_ids: [postgres-best-practices, postgresql]
+- query: set up neon serverless postgres
+  expected_ids: [neon-postgres]
+- query: build a graphql api architecture
+  expected_ids: [graphql-architect, graphql]
+- query: write airflow dags with best practices
+  expected_ids: [airflow-dag-patterns]
+- query: build dbt transformation models
+  expected_ids: [dbt-transformation-patterns]
+- query: design a langchain agent architecture
+  expected_ids: [langchain-architecture, llm-application-dev-langchain-agent]
+- query: evaluate llm output quality
+  expected_ids: [llm-evaluation]
+- query: optimize prompts for an llm application
+  expected_ids: [prompt-engineering, prompt-engineering-patterns, prompt-engineer, llm-application-dev-prompt-optimize]
+- query: build an ml pipeline for production
+  expected_ids: [ml-pipeline-workflow, machine-learning-ops-ml-pipeline, ml-engineer]
+- query: test a web application for idor vulnerabilities
+  expected_ids: [idor-testing]
+- query: test for broken authentication vulnerabilities
+  expected_ids: [broken-authentication]
+- query: fuzz test an api for bugs
+  expected_ids: [api-fuzzing-bug-bounty]
+- query: respond to a production security incident
+  expected_ids: [incident-responder, incident-response-incident-response]
+- query: write end-to-end tests for a web app
+  expected_ids: [e2e-testing-patterns]
+- query: write idiomatic async python code
+  expected_ids: [async-python-patterns]
+- query: manage react state in a large application
+  expected_ids: [react-state-management]
+- query: modernize a legacy react codebase
+  expected_ids: [react-modernization]
+- query: build a design system with tailwind css
+  expected_ids: [tailwind-design-system, tailwind-patterns]
+- query: advanced typescript type-level patterns
+  expected_ids: [typescript-advanced-types]
+- query: implement user authentication in a web app
+  expected_ids: [auth-implementation-patterns, clerk-auth, nextjs-supabase-auth]
+- query: build a nextjs app with the app router
+  expected_ids: [nextjs-app-router-patterns, nextjs-best-practices]
+- query: write async rust code
+  expected_ids: [rust-async-patterns]
+- query: run a penetration test against aws infrastructure
+  expected_ids: [aws-penetration-testing, cloud-penetration-testing]

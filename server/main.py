@@ -11,7 +11,9 @@ Exposes 4 tools over stdio transport:
 
 from __future__ import annotations
 
+import logging
 import os
+import time
 from pathlib import Path
 
 from mcp.server.fastmcp import FastMCP
@@ -21,6 +23,8 @@ from server.graph.traversal import build_skill_context_object
 from server.models.skill_node import NeighborMetadata, SkillCandidate, SkillContextObject
 from server.search.vector_search import search_skills as search_skills_impl
 from server.session import ACTIVE_TOOL_CAP, GET_SKILL_RATE_LIMIT, get_state
+
+logger = logging.getLogger(__name__)
 
 KNOWLEDGE_BASE_DIR: Path = Path(
     os.getenv(
@@ -102,7 +106,14 @@ async def search_skills(query: str) -> list[dict]:
     if len(query) > 2000:
         raise ValueError("query must not exceed 2000 characters.")
     client = _get_neo4j_client()
+    started = time.monotonic()
     candidates: list[SkillCandidate] = await search_skills_impl(client._driver, query)
+    duration_ms = (time.monotonic() - started) * 1000
+    top_score = candidates[0].semantic_score if candidates else None
+    logger.info(
+        "search_skills: query_len=%d results=%d top_score=%s duration_ms=%.1f",
+        len(query), len(candidates), top_score, duration_ms,
+    )
     return [c.model_dump() for c in candidates]
 
 
@@ -125,6 +136,10 @@ async def get_skill(id: str, depth: str = "shallow") -> dict:
     """
     state = get_state()
     if state.get_skill_calls >= GET_SKILL_RATE_LIMIT:
+        logger.warning(
+            "get_skill: rate limit hit id=%r limit=%d current=%d",
+            id, GET_SKILL_RATE_LIMIT, state.get_skill_calls,
+        )
         raise ValueError(
             f"Rate limit reached: get_skill may be called at most "
             f"{GET_SKILL_RATE_LIMIT} times per session "
