@@ -4,7 +4,9 @@
 *.env.production
 
 # Generated data
-staging/
+# staging/skills/*.yaml IS tracked — it's the compiled skill data the MCP
+# server loads, not a build artifact. Only the embedder's incremental-update
+# cache stays ignored.
 index_metadata.json
 
 # Viz — generated files (rebuild with enrich_semantic.py + build_html.py)

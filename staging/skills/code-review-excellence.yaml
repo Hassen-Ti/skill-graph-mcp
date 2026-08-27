@@ -1,0 +1,85 @@
+id: code-review-excellence
+name: code-review-excellence
+type: domain
+author: sklills_lib
+version: 1.0.0
+description: Master effective code review practices to provide constructive feedback, catch bugs early, and foster knowledge
+  sharing while maintaining team morale. Use when reviewing pull requests, establishing review standards, or mentoring developers.
+priority: 2
+payload:
+  instructions: '# Code Review Excellence
+
+
+    Transform code reviews from gatekeeping to knowledge sharing through constructive feedback, systematic analysis, and collaborative
+    improvement.
+
+
+    ## Use this skill when
+
+
+    - Reviewing pull requests and code changes
+
+    - Establishing code review standards
+
+    - Mentoring developers through review feedback
+
+    - Auditing for correctness, security, or performance
+
+
+    ## Do not use this skill when
+
+
+    - There are no code changes to review
+
+    - The task is a design-only discussion without code
+
+    - You need to implement fixes instead of reviewing
+
+
+    ## Instructions
+
+
+    - Read context, requirements, and test signals first.
+
+    - Review for correctness, security, performance, and maintainability.
+
+    - Provide actionable feedback with severity and rationale.
+
+    - Ask clarifying questions when intent is unclear.
+
+    - If detailed checklists are required, open `resources/implementation-playbook.md`.
+
+
+    ## Output Format
+
+
+    - High-level summary of findings
+
+    - Issues grouped by severity (blocking, important, minor)
+
+    - Suggestions and questions
+
+    - Test and coverage notes
+
+
+    ## Resources
+
+
+    - `resources/implementation-playbook.md` for detailed review patterns and templates.'
+edges:
+- to: kaizen
+  type: collaborates_with
+- to: receiving-code-review
+  type: collaborates_with
+- to: code-review-checklist
+  type: collaborates_with
+- to: comprehensive-review-pr-enhance
+  type: collaborates_with
+- to: git-pr-workflows-pr-enhance
+  type: collaborates_with
+- to: clean-code
+  type: collaborates_with
+- to: code-reviewer
+  type: collaborates_with
+- to: find-bugs
+  type: collaborates_with

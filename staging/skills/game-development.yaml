@@ -1,0 +1,1578 @@
+id: game-development
+name: game-development
+type: domain
+author: sklills_lib
+version: 1.0.0
+description: Game development orchestrator. Routes to platform-specific skills based on project needs.
+priority: 2
+payload:
+  instructions: |-
+    # Game Development
+
+    > **Orchestrator skill** that provides core principles and routes to specialized sub-skills.
+
+    ---
+
+    ## When to Use This Skill
+
+    You are working on a game development project. This skill teaches the PRINCIPLES of game development and directs you to the right sub-skill based on context.
+
+    ---
+
+    ## Sub-Skill Routing
+
+    ### Platform Selection
+
+    | If the game targets... | Use Sub-Skill |
+    |------------------------|---------------|
+    | Web browsers (HTML5, WebGL) | `game-development/web-games` |
+    | Mobile (iOS, Android) | `game-development/mobile-games` |
+    | PC (Steam, Desktop) | `game-development/pc-games` |
+    | VR/AR headsets | `game-development/vr-ar` |
+
+    ### Dimension Selection
+
+    | If the game is... | Use Sub-Skill |
+    |-------------------|---------------|
+    | 2D (sprites, tilemaps) | `game-development/2d-games` |
+    | 3D (meshes, shaders) | `game-development/3d-games` |
+
+    ### Specialty Areas
+
+    | If you need... | Use Sub-Skill |
+    |----------------|---------------|
+    | GDD, balancing, player psychology | `game-development/game-design` |
+    | Multiplayer, networking | `game-development/multiplayer` |
+    | Visual style, asset pipeline, animation | `game-development/game-art` |
+    | Sound design, music, adaptive audio | `game-development/game-audio` |
+
+    ---
+
+    ## Core Principles (All Platforms)
+
+    ### 1. The Game Loop
+
+    Every game, regardless of platform, follows this pattern:
+
+    ```
+    INPUT  → Read player actions
+    UPDATE → Process game logic (fixed timestep)
+    RENDER → Draw the frame (interpolated)
+    ```
+
+    **Fixed Timestep Rule:**
+    - Physics/logic: Fixed rate (e.g., 50Hz)
+    - Rendering: As fast as possible
+    - Interpolate between states for smooth visuals
+
+    ---
+
+    ### 2. Pattern Selection Matrix
+
+    | Pattern | Use When | Example |
+    |---------|----------|---------|
+    | **State Machine** | 3-5 discrete states | Player: Idle→Walk→Jump |
+    | **Object Pooling** | Frequent spawn/destroy | Bullets, particles |
+    | **Observer/Events** | Cross-system communication | Health→UI updates |
+    | **ECS** | Thousands of similar entities | RTS units, particles |
+    | **Command** | Undo, replay, networking | Input recording |
+    | **Behavior Tree** | Complex AI decisions | Enemy AI |
+
+    **Decision Rule:** Start with State Machine. Add ECS only when performance demands.
+
+    ---
+
+    ### 3. Input Abstraction
+
+    Abstract input into ACTIONS, not raw keys:
+
+    ```
+    "jump"  → Space, Gamepad A, Touch tap
+    "move"  → WASD, Left stick, Virtual joystick
+    ```
+
+    **Why:** Enables multi-platform, rebindable controls.
+
+    ---
+
+    ### 4. Performance Budget (60 FPS = 16.67ms)
+
+    | System | Budget |
+    |--------|--------|
+    | Input | 1ms |
+    | Physics | 3ms |
+    | AI | 2ms |
+    | Game Logic | 4ms |
+    | Rendering | 5ms |
+    | Buffer | 1.67ms |
+
+    **Optimization Priority:**
+    1. Algorithm (O(n²) → O(n log n))
+    2. Batching (reduce draw calls)
+    3. Pooling (avoid GC spikes)
+    4. LOD (detail by distance)
+    5. Culling (skip invisible)
+
+    ---
+
+    ### 5. AI Selection by Complexity
+
+    | AI Type | Complexity | Use When |
+    |---------|------------|----------|
+    | **FSM** | Simple | 3-5 states, predictable behavior |
+    | **Behavior Tree** | Medium | Modular, designer-friendly |
+    | **GOAP** | High | Emergent, planning-based |
+    | **Utility AI** | High | Scoring-based decisions |
+
+    ---
+
+    ### 6. Collision Strategy
+
+    | Type | Best For |
+    |------|----------|
+    | **AABB** | Rectangles, fast checks |
+    | **Circle** | Round objects, cheap |
+    | **Spatial Hash** | Many similar-sized objects |
+    | **Quadtree** | Large worlds, varying sizes |
+
+    ---
+
+    ## Anti-Patterns (Universal)
+
+    | Don't | Do |
+    |-------|-----|
+    | Update everything every frame | Use events, dirty flags |
+    | Create objects in hot loops | Object pooling |
+    | Cache nothing | Cache references |
+    | Optimize without profiling | Profile first |
+    | Mix input with logic | Abstract input layer |
+
+    ---
+
+    ## Routing Examples
+
+    ### Example 1: "I want to make a browser-based 2D platformer"
+    → Start with `game-development/web-games` for framework selection
+    → Then `game-development/2d-games` for sprite/tilemap patterns
+    → Reference `game-development/game-design` for level design
+
+    ### Example 2: "Mobile puzzle game for iOS and Android"
+    → Start with `game-development/mobile-games` for touch input and stores
+    → Use `game-development/game-design` for puzzle balancing
+
+    ### Example 3: "Multiplayer VR shooter"
+    → `game-development/vr-ar` for comfort and immersion
+    → `game-development/3d-games` for rendering
+    → `game-development/multiplayer` for networking
+
+    ---
+
+    > **Remember:** Great games come from iteration, not perfection. Prototype fast, then polish.
+
+    ---
+
+    ## 2d-games
+
+    # 2D Game Development
+
+    > Principles for 2D game systems.
+
+    ---
+
+    ## 1. Sprite Systems
+
+    ### Sprite Organization
+
+    | Component | Purpose |
+    |-----------|---------|
+    | **Atlas** | Combine textures, reduce draw calls |
+    | **Animation** | Frame sequences |
+    | **Pivot** | Rotation/scale origin |
+    | **Layering** | Z-order control |
+
+    ### Animation Principles
+
+    - Frame rate: 8-24 FPS typical
+    - Squash and stretch for impact
+    - Anticipation before action
+    - Follow-through after action
+
+    ---
+
+    ## 2. Tilemap Design
+
+    ### Tile Considerations
+
+    | Factor | Recommendation |
+    |--------|----------------|
+    | **Size** | 16x16, 32x32, 64x64 |
+    | **Auto-tiling** | Use for terrain |
+    | **Collision** | Simplified shapes |
+
+    ### Layers
+
+    | Layer | Content |
+    |-------|---------|
+    | Background | Non-interactive scenery |
+    | Terrain | Walkable ground |
+    | Props | Interactive objects |
+    | Foreground | Parallax overlay |
+
+    ---
+
+    ## 3. 2D Physics
+
+    ### Collision Shapes
+
+    | Shape | Use Case |
+    |-------|----------|
+    | Box | Rectangular objects |
+    | Circle | Balls, rounded |
+    | Capsule | Characters |
+    | Polygon | Complex shapes |
+
+    ### Physics Considerations
+
+    - Pixel-perfect vs physics-based
+    - Fixed timestep for consistency
+    - Layers for filtering
+
+    ---
+
+    ## 4. Camera Systems
+
+    ### Camera Types
+
+    | Type | Use |
+    |------|-----|
+    | **Follow** | Track player |
+    | **Look-ahead** | Anticipate movement |
+    | **Multi-target** | Two-player |
+    | **Room-based** | Metroidvania |
+
+    ### Screen Shake
+
+    - Short duration (50-200ms)
+    - Diminishing intensity
+    - Use sparingly
+
+    ---
+
+    ## 5. Genre Patterns
+
+    ### Platformer
+
+    - Coyote time (leniency after edge)
+    - Jump buffering
+    - Variable jump height
+
+    ### Top-down
+
+    - 8-directional or free movement
+    - Aim-based or auto-aim
+    - Consider rotation or not
+
+    ---
+
+    ## 6. Anti-Patterns
+
+    | ❌ Don't | ✅ Do |
+    |----------|-------|
+    | Separate textures | Use atlases |
+    | Complex collision shapes | Simplified collision |
+    | Jittery camera | Smooth following |
+    | Pixel-perfect on physics | Choose one approach |
+
+    ---
+
+    > **Remember:** 2D is about clarity. Every pixel should communicate.
+
+    ---
+
+    ## 3d-games
+
+    # 3D Game Development
+
+    > Principles for 3D game systems.
+
+    ---
+
+    ## 1. Rendering Pipeline
+
+    ### Stages
+
+    ```
+    1. Vertex Processing → Transform geometry
+    2. Rasterization → Convert to pixels
+    3. Fragment Processing → Color pixels
+    4. Output → To screen
+    ```
+
+    ### Optimization Principles
+
+    | Technique | Purpose |
+    |-----------|---------|
+    | **Frustum culling** | Don't render off-screen |
+    | **Occlusion culling** | Don't render hidden |
+    | **LOD** | Less detail at distance |
+    | **Batching** | Combine draw calls |
+
+    ---
+
+    ## 2. Shader Principles
+
+    ### Shader Types
+
+    | Type | Purpose |
+    |------|---------|
+    | **Vertex** | Position, normals |
+    | **Fragment/Pixel** | Color, lighting |
+    | **Compute** | General computation |
+
+    ### When to Write Custom Shaders
+
+    - Special effects (water, fire, portals)
+    - Stylized rendering (toon, sketch)
+    - Performance optimization
+    - Unique visual identity
+
+    ---
+
+    ## 3. 3D Physics
+
+    ### Collision Shapes
+
+    | Shape | Use Case |
+    |-------|----------|
+    | **Box** | Buildings, crates |
+    | **Sphere** | Balls, quick checks |
+    | **Capsule** | Characters |
+    | **Mesh** | Terrain (expensive) |
+
+    ### Principles
+
+    - Simple colliders, complex visuals
+    - Layer-based filtering
+    - Raycasting for line-of-sight
+
+    ---
+
+    ## 4. Camera Systems
+
+    ### Camera Types
+
+    | Type | Use |
+    |------|-----|
+    | **Third-person** | Action, adventure |
+    | **First-person** | Immersive, FPS |
+    | **Isometric** | Strategy, RPG |
+    | **Orbital** | Inspection, editors |
+
+    ### Camera Feel
+
+    - Smooth following (lerp)
+    - Collision avoidance
+    - Look-ahead for movement
+    - FOV changes for speed
+
+    ---
+
+    ## 5. Lighting
+
+    ### Light Types
+
+    | Type | Use |
+    |------|-----|
+    | **Directional** | Sun, moon |
+    | **Point** | Lamps, torches |
+    | **Spot** | Flashlight, stage |
+    | **Ambient** | Base illumination |
+
+    ### Performance Consideration
+
+    - Real-time shadows are expensive
+    - Bake when possible
+    - Shadow cascades for large worlds
+
+    ---
+
+    ## 6. Level of Detail (LOD)
+
+    ### LOD Strategy
+
+    | Distance | Model |
+    |----------|-------|
+    | Near | Full detail |
+    | Medium | 50% triangles |
+    | Far | 25% or billboard |
+
+    ---
+
+    ## 7. Anti-Patterns
+
+    | ❌ Don't | ✅ Do |
+    |----------|-------|
+    | Mesh colliders everywhere | Simple shapes |
+    | Real-time shadows on mobile | Baked or blob shadows |
+    | One LOD for all distances | Distance-based LOD |
+    | Unoptimized shaders | Profile and simplify |
+
+    ---
+
+    > **Remember:** 3D is about illusion. Create the impression of detail, not the detail itself.
+
+    ---
+
+    ## game-art
+
+    # Game Art Principles
+
+    > Visual design thinking for games - style selection, asset pipelines, and art direction.
+
+    ---
+
+    ## 1. Art Style Selection
+
+    ### Decision Tree
+
+    ```
+    What feeling should the game evoke?
+    │
+    ├── Nostalgic / Retro
+    │   ├── Limited palette? → Pixel Art
+    │   └── Hand-drawn feel? → Vector / Flash style
+    │
+    ├── Realistic / Immersive
+    │   ├── High budget? → PBR 3D
+    │   └── Stylized realism? → Hand-painted textures
+    │
+    ├── Approachable / Casual
+    │   ├── Clean shapes? → Flat / Minimalist
+    │   └── Soft feel? → Gradient / Soft shadows
+    │
+    └── Unique / Experimental
+        └── Define custom style guide
+    ```
+
+    ### Style Comparison Matrix
+
+    | Style | Production Speed | Skill Floor | Scalability | Best For |
+    |-------|------------------|-------------|-------------|----------|
+    | **Pixel Art** | Medium | Medium | Hard to hire | Indie, retro |
+    | **Vector/Flat** | Fast | Low | Easy | Mobile, casual |
+    | **Hand-painted** | Slow | High | Medium | Fantasy, stylized |
+    | **PBR 3D** | Slow | High | AAA pipeline | Realistic games |
+    | **Low-poly** | Fast | Medium | Easy | Indie 3D |
+    | **Cel-shaded** | Medium | Medium | Medium | Anime, cartoon |
+
+    ---
+
+    ## 2. Asset Pipeline Decisions
+
+    ### 2D Pipeline
+
+    | Phase | Tool Options | Output |
+    |-------|--------------|--------|
+    | **Concept** | Paper, Procreate, Photoshop | Reference sheet |
+    | **Creation** | Aseprite, Photoshop, Krita | Individual sprites |
+    | **Atlas** | TexturePacker, Aseprite | Spritesheet |
+    | **Animation** | Spine, DragonBones, Frame-by-frame | Animation data |
+    | **Integration** | Engine import | Game-ready assets |
+
+    ### 3D Pipeline
+
+    | Phase | Tool Options | Output |
+    |-------|--------------|--------|
+    | **Concept** | 2D art, Blockout | Reference |
+    | **Modeling** | Blender, Maya, 3ds Max | High-poly mesh |
+    | **Retopology** | Blender, ZBrush | Game-ready mesh |
+    | **UV/Texturing** | Substance Painter, Blender | Texture maps |
+    | **Rigging** | Blender, Maya | Skeletal rig |
+    | **Animation** | Blender, Maya, Mixamo | Animation clips |
+    | **Export** | FBX, glTF | Engine-ready |
+
+    ---
+
+    ## 3. Color Theory Decisions
+
+    ### Palette Selection
+
+    | Goal | Strategy | Example |
+    |------|----------|---------|
+    | **Harmony** | Complementary or analogous | Nature games |
+    | **Contrast** | High saturation differences | Action games |
+    | **Mood** | Warm/cool temperature | Horror, cozy |
+    | **Readability** | Value contrast over hue | Gameplay clarity |
+
+    ### Color Principles
+
+    - **Hierarchy:** Important elements should pop
+    - **Consistency:** Same object = same color family
+    - **Context:** Colors read differently on backgrounds
+    - **Accessibility:** Don't rely only on color
+
+    ---
+
+    ## 4. Animation Principles
+
+    ### The 12 Principles (Applied to Games)
+
+    | Principle | Game Application |
+    |-----------|------------------|
+    | **Squash & Stretch** | Jump arcs, impacts |
+    | **Anticipation** | Wind-up before attack |
+    | **Staging** | Clear silhouettes |
+    | **Follow-through** | Hair, capes after movement |
+    | **Slow in/out** | Easing on transitions |
+    | **Arcs** | Natural movement paths |
+    | **Secondary Action** | Breathing, blinking |
+    | **Timing** | Frame count = weight/speed |
+    | **Exaggeration** | Readable from distance |
+    | **Appeal** | Memorable design |
+
+    ### Frame Count Guidelines
+
+    | Action Type | Typical Frames | Feel |
+    |-------------|----------------|------|
+    | Idle breathing | 4-8 | Subtle |
+    | Walk cycle | 6-12 | Smooth |
+    | Run cycle | 4-8 | Energetic |
+    | Attack | 3-6 | Snappy |
+    | Death | 8-16 | Dramatic |
+
+    ---
+
+    ## 5. Resolution & Scale Decisions
+
+    ### 2D Resolution by Platform
+
+    | Platform | Base Resolution | Sprite Scale |
+    |----------|-----------------|--------------|
+    | Mobile | 1080p | 64-128px characters |
+    | Desktop | 1080p-4K | 128-256px characters |
+    | Pixel art | 320x180 to 640x360 | 16-32px characters |
+
+    ### Consistency Rule
+
+    Choose a base unit and stick to it:
+    - Pixel art: Work at 1x, scale up (never down)
+    - HD art: Define DPI, maintain ratio
+    - 3D: 1 unit = 1 meter (industry standard)
+
+    ---
+
+    ## 6. Asset Organization
+
+    ### Naming Convention
+
+    ```
+    [type]_[object]_[variant]_[state].[ext]
+
+    Examples:
+    spr_player_idle_01.png
+    tex_stone_wall_normal.png
+    mesh_tree_oak_lod2.fbx
+    ```
+
+    ### Folder Structure Principle
+
+    ```
+    assets/
+    ├── characters/
+    │   ├── player/
+    │   └── enemies/
+    ├── environment/
+    │   ├── props/
+    │   └── tiles/
+    ├── ui/
+    ├── effects/
+    └── audio/
+    ```
+
+    ---
+
+    ## 7. Anti-Patterns
+
+    | Don't | Do |
+    |-------|-----|
+    | Mix art styles randomly | Define and follow style guide |
+    | Work at final resolution only | Create at source resolution |
+    | Ignore silhouette readability | Test at gameplay distance |
+    | Over-detail background | Focus detail on player area |
+    | Skip color testing | Test on target display |
+
+    ---
+
+    > **Remember:** Art serves gameplay. If it doesn't help the player, it's decoration.
+
+    ---
+
+    ## game-audio
+
+    # Game Audio Principles
+
+    > Sound design and music integration for immersive game experiences.
+
+    ---
+
+    ## 1. Audio Category System
+
+    ### Category Definitions
+
+    | Category | Behavior | Examples |
+    |----------|----------|----------|
+    | **Music** | Looping, crossfade, ducking | BGM, combat music |
+    | **SFX** | One-shot, 3D positioned | Footsteps, impacts |
+    | **Ambient** | Looping, background layer | Wind, crowd, forest |
+    | **UI** | Immediate, non-3D | Button clicks, notifications |
+    | **Voice** | Priority, ducking trigger | Dialogue, announcer |
+
+    ### Priority Hierarchy
+
+    ```
+    When sounds compete for channels:
+
+    1. Voice (highest - always audible)
+    2. Player SFX (feedback critical)
+    3. Enemy SFX (gameplay important)
+    4. Music (mood, but duckable)
+    5. Ambient (lowest - can drop)
+    ```
+
+    ---
+
+    ## 2. Sound Design Decisions
+
+    ### SFX Creation Approach
+
+    | Approach | When to Use | Trade-offs |
+    |----------|-------------|------------|
+    | **Recording** | Realistic needs | High quality, time intensive |
+    | **Synthesis** | Sci-fi, retro, UI | Unique, requires skill |
+    | **Library samples** | Fast production | Common sounds, licensing |
+    | **Layering** | Complex sounds | Best results, more work |
+
+    ### Layering Structure
+
+    | Layer | Purpose | Example: Gunshot |
+    |-------|---------|------------------|
+    | **Attack** | Initial transient | Click, snap |
+    | **Body** | Main character | Boom, blast |
+    | **Tail** | Decay, room | Reverb, echo |
+    | **Sweetener** | Special sauce | Shell casing, mechanical |
+
+    ---
+
+    ## 3. Music Integration
+
+    ### Music State System
+
+    ```
+    Game State → Music Response
+    │
+    ├── Menu → Calm, loopable theme
+    ├── Exploration → Ambient, atmospheric
+    ├── Combat detected → Transition to tension
+    ├── Combat engaged → Full battle music
+    ├── Victory → Stinger + calm transition
+    ├── Defeat → Somber stinger
+    └── Boss → Unique, multi-phase track
+    ```
+
+    ### Transition Techniques
+
+    | Technique | Use When | Feel |
+    |-----------|----------|------|
+    | **Crossfade** | Smooth mood shift | Gradual |
+    | **Stinger** | Immediate event | Dramatic |
+    | **Stem mixing** | Dynamic intensity | Seamless |
+    | **Beat-synced** | Rhythmic gameplay | Musical |
+    | **Queue point** | Next natural break | Clean |
+
+    ---
+
+    ## 4. Adaptive Audio Decisions
+
+    ### Intensity Parameters
+
+    | Parameter | Affects | Example |
+    |-----------|---------|---------|
+    | **Threat level** | Music intensity | Enemy count |
+    | **Health** | Filter, reverb | Low health = muffled |
+    | **Speed** | Tempo, energy | Racing speed |
+    | **Environment** | Reverb, EQ | Cave vs outdoor |
+    | **Time of day** | Mood, volume | Night = quieter |
+
+    ### Vertical vs Horizontal
+
+    | System | What Changes | Best For |
+    |--------|--------------|----------|
+    | **Vertical (layers)** | Add/remove instrument layers | Intensity scaling |
+    | **Horizontal (segments)** | Different music sections | State changes |
+    | **Combined** | Both | AAA adaptive scores |
+
+    ---
+
+    ## 5. 3D Audio Decisions
+
+    ### Spatialization
+
+    | Element | 3D Positioned? | Reason |
+    |---------|----------------|--------|
+    | Player footsteps | No (or subtle) | Always audible |
+    | Enemy footsteps | Yes | Directional awareness |
+    | Gunfire | Yes | Combat awareness |
+    | Music | No | Mood, non-diegetic |
+    | Ambient zone | Yes (area) | Environmental |
+    | UI sounds | No | Interface feedback |
+
+    ### Distance Behavior
+
+    | Distance | Sound Behavior |
+    |----------|----------------|
+    | **Near** | Full volume, full frequency |
+    | **Medium** | Volume falloff, high-freq rolloff |
+    | **Far** | Low volume, low-pass filter |
+    | **Max** | Silent or ambient hint |
+
+    ---
+
+    ## 6. Platform Considerations
+
+    ### Format Selection
+
+    | Platform | Recommended Format | Reason |
+    |----------|-------------------|--------|
+    | PC | OGG Vorbis, WAV | Quality, no licensing |
+    | Console | Platform-specific | Certification |
+    | Mobile | MP3, AAC | Size, compatibility |
+    | Web | WebM/Opus, MP3 fallback | Browser support |
+
+    ### Memory Budget
+
+    | Game Type | Audio Budget | Strategy |
+    |-----------|--------------|----------|
+    | Mobile casual | 10-50 MB | Compressed, fewer variants |
+    | PC indie | 100-500 MB | Quality focus |
+    | AAA | 1+ GB | Full quality, many variants |
+
+    ---
+
+    ## 7. Mix Hierarchy
+
+    ### Volume Balance Reference
+
+    | Category | Relative Level | Notes |
+    |----------|----------------|-------|
+    | **Voice** | 0 dB (reference) | Always clear |
+    | **Player SFX** | -3 to -6 dB | Prominent but not harsh |
+    | **Music** | -6 to -12 dB | Foundation, ducks for voice |
+    | **Enemy SFX** | -6 to -9 dB | Important but not dominant |
+    | **Ambient** | -12 to -18 dB | Subtle background |
+
+    ### Ducking Rules
+
+    | When | Duck What | Amount |
+    |------|-----------|--------|
+    | Voice plays | Music, Ambient | -6 to -9 dB |
+    | Explosion | All except explosion | Brief duck |
+    | Menu open | Gameplay audio | -3 to -6 dB |
+
+    ---
+
+    ## 8. Anti-Patterns
+
+    | Don't | Do |
+    |-------|-----|
+    | Play same sound repeatedly | Use variations (3-5 per sound) |
+    | Max volume everything | Use proper mix hierarchy |
+    | Ignore silence | Silence creates contrast |
+    | One music track loops forever | Provide variety, transitions |
+    | Skip audio in prototype | Placeholder audio matters |
+
+    ---
+
+    > **Remember:** 50% of the game experience is audio. A muted game loses half its soul.
+
+    ---
+
+    ## game-design
+
+    # Game Design Principles
+
+    > Design thinking for engaging games.
+
+    ---
+
+    ## 1. Core Loop Design
+
+    ### The 30-Second Test
+
+    ```
+    Every game needs a fun 30-second loop:
+    1. ACTION → Player does something
+    2. FEEDBACK → Game responds
+    3. REWARD → Player feels good
+    4. REPEAT
+    ```
+
+    ### Loop Examples
+
+    | Genre | Core Loop |
+    |-------|-----------|
+    | Platformer | Run → Jump → Land → Collect |
+    | Shooter | Aim → Shoot → Kill → Loot |
+    | Puzzle | Observe → Think → Solve → Advance |
+    | RPG | Explore → Fight → Level → Gear |
+
+    ---
+
+    ## 2. Game Design Document (GDD)
+
+    ### Essential Sections
+
+    | Section | Content |
+    |---------|---------|
+    | **Pitch** | One-sentence description |
+    | **Core Loop** | 30-second gameplay |
+    | **Mechanics** | How systems work |
+    | **Progression** | How player advances |
+    | **Art Style** | Visual direction |
+    | **Audio** | Sound direction |
+
+    ### Principles
+
+    - Keep it living (update regularly)
+    - Visuals help communicate
+    - Less is more (start small)
+
+    ---
+
+    ## 3. Player Psychology
+
+    ### Motivation Types
+
+    | Type | Driven By |
+    |------|-----------|
+    | **Achiever** | Goals, completion |
+    | **Explorer** | Discovery, secrets |
+    | **Socializer** | Interaction, community |
+    | **Killer** | Competition, dominance |
+
+    ### Reward Schedules
+
+    | Schedule | Effect | Use |
+    |----------|--------|-----|
+    | **Fixed** | Predictable | Milestone rewards |
+    | **Variable** | Addictive | Loot drops |
+    | **Ratio** | Effort-based | Grind games |
+
+    ---
+
+    ## 4. Difficulty Balancing
+
+    ### Flow State
+
+    ```
+    Too Hard → Frustration → Quit
+    Too Easy → Boredom → Quit
+    Just Right → Flow → Engagement
+    ```
+
+    ### Balancing Strategies
+
+    | Strategy | How |
+    |----------|-----|
+    | **Dynamic** | Adjust to player skill |
+    | **Selection** | Let player choose |
+    | **Accessibility** | Options for all |
+
+    ---
+
+    ## 5. Progression Design
+
+    ### Progression Types
+
+    | Type | Example |
+    |------|---------|
+    | **Skill** | Player gets better |
+    | **Power** | Character gets stronger |
+    | **Content** | New areas unlock |
+    | **Story** | Narrative advances |
+
+    ### Pacing Principles
+
+    - Early wins (hook quickly)
+    - Gradually increase challenge
+    - Rest beats between intensity
+    - Meaningful choices
+
+    ---
+
+    ## 6. Anti-Patterns
+
+    | ❌ Don't | ✅ Do |
+    |----------|-------|
+    | Design in isolation | Playtest constantly |
+    | Polish before fun | Prototype first |
+    | Force one way to play | Allow player expression |
+    | Punish excessively | Reward progress |
+
+    ---
+
+    > **Remember:** Fun is discovered through iteration, not designed on paper.
+
+    ---
+
+    ## mobile-games
+
+    # Mobile Game Development
+
+    > Platform constraints and optimization principles.
+
+    ---
+
+    ## 1. Platform Considerations
+
+    ### Key Constraints
+
+    | Constraint | Strategy |
+    |------------|----------|
+    | **Touch input** | Large hit areas, gestures |
+    | **Battery** | Limit CPU/GPU usage |
+    | **Thermal** | Throttle when hot |
+    | **Screen size** | Responsive UI |
+    | **Interruptions** | Pause on background |
+
+    ---
+
+    ## 2. Touch Input Principles
+
+    ### Touch vs Controller
+
+    | Touch | Desktop/Console |
+    |-------|-----------------|
+    | Imprecise | Precise |
+    | Occludes screen | No occlusion |
+    | Limited buttons | Many buttons |
+    | Gestures available | Buttons/sticks |
+
+    ### Best Practices
+
+    - Minimum touch target: 44x44 points
+    - Visual feedback on touch
+    - Avoid precise timing requirements
+    - Support both portrait and landscape
+
+    ---
+
+    ## 3. Performance Targets
+
+    ### Thermal Management
+
+    | Action | Trigger |
+    |--------|---------|
+    | Reduce quality | Device warm |
+    | Limit FPS | Device hot |
+    | Pause effects | Critical temp |
+
+    ### Battery Optimization
+
+    - 30 FPS often sufficient
+    - Sleep when paused
+    - Minimize GPS/network
+    - Dark mode saves OLED battery
+
+    ---
+
+    ## 4. App Store Requirements
+
+    ### iOS (App Store)
+
+    | Requirement | Note |
+    |-------------|------|
+    | Privacy labels | Required |
+    | Account deletion | If account creation exists |
+    | Screenshots | For all device sizes |
+
+    ### Android (Google Play)
+
+    | Requirement | Note |
+    |-------------|------|
+    | Target API | Current year's SDK |
+    | 64-bit | Required |
+    | App bundles | Recommended |
+
+    ---
+
+    ## 5. Monetization Models
+
+    | Model | Best For |
+    |-------|----------|
+    | **Premium** | Quality games, loyal audience |
+    | **Free + IAP** | Casual, progression-based |
+    | **Ads** | Hyper-casual, high volume |
+    | **Subscription** | Content updates, multiplayer |
+
+    ---
+
+    ## 6. Anti-Patterns
+
+    | ❌ Don't | ✅ Do |
+    |----------|-------|
+    | Desktop controls on mobile | Design for touch |
+    | Ignore battery drain | Monitor thermals |
+    | Force landscape | Support player preference |
+    | Always-on network | Cache and sync |
+
+    ---
+
+    > **Remember:** Mobile is the most constrained platform. Respect battery and attention.
+
+    ---
+
+    ## multiplayer
+
+    # Multiplayer Game Development
+
+    > Networking architecture and synchronization principles.
+
+    ---
+
+    ## 1. Architecture Selection
+
+    ### Decision Tree
+
+    ```
+    What type of multiplayer?
+    │
+    ├── Competitive / Real-time
+    │   └── Dedicated Server (authoritative)
+    │
+    ├── Cooperative / Casual
+    │   └── Host-based (one player is server)
+    │
+    ├── Turn-based
+    │   └── Client-server (simple)
+    │
+    └── Massive (MMO)
+        └── Distributed servers
+    ```
+
+    ### Comparison
+
+    | Architecture | Latency | Cost | Security |
+    |--------------|---------|------|----------|
+    | **Dedicated** | Low | High | Strong |
+    | **P2P** | Variable | Low | Weak |
+    | **Host-based** | Medium | Low | Medium |
+
+    ---
+
+    ## 2. Synchronization Principles
+
+    ### State vs Input
+
+    | Approach | Sync What | Best For |
+    |----------|-----------|----------|
+    | **State Sync** | Game state | Simple, few objects |
+    | **Input Sync** | Player inputs | Action games |
+    | **Hybrid** | Both | Most games |
+
+    ### Lag Compensation
+
+    | Technique | Purpose |
+    |-----------|---------|
+    | **Prediction** | Client predicts server |
+    | **Interpolation** | Smooth remote players |
+    | **Reconciliation** | Fix mispredictions |
+    | **Lag compensation** | Rewind for hit detection |
+
+    ---
+
+    ## 3. Network Optimization
+
+    ### Bandwidth Reduction
+
+    | Technique | Savings |
+    |-----------|---------|
+    | **Delta compression** | Send only changes |
+    | **Quantization** | Reduce precision |
+    | **Priority** | Important data first |
+    | **Area of interest** | Only nearby entities |
+
+    ### Update Rates
+
+    | Type | Rate |
+    |------|------|
+    | Position | 20-60 Hz |
+    | Health | On change |
+    | Inventory | On change |
+    | Chat | On send |
+
+    ---
+
+    ## 4. Security Principles
+
+    ### Server Authority
+
+    ```
+    Client: "I hit the enemy"
+    Server: Validate → did projectile actually hit?
+             → was player in valid state?
+             → was timing possible?
+    ```
+
+    ### Anti-Cheat
+
+    | Cheat | Prevention |
+    |-------|------------|
+    | Speed hack | Server validates movement |
+    | Aimbot | Server validates sight line |
+    | Item dupe | Server owns inventory |
+    | Wall hack | Don't send hidden data |
+
+    ---
+
+    ## 5. Matchmaking
+
+    ### Considerations
+
+    | Factor | Impact |
+    |--------|--------|
+    | **Skill** | Fair matches |
+    | **Latency** | Playable connection |
+    | **Wait time** | Player patience |
+    | **Party size** | Group play |
+
+    ---
+
+    ## 6. Anti-Patterns
+
+    | ❌ Don't | ✅ Do |
+    |----------|-------|
+    | Trust the client | Server is authority |
+    | Send everything | Send only necessary |
+    | Ignore latency | Design for 100-200ms |
+    | Sync exact positions | Interpolate/predict |
+
+    ---
+
+    > **Remember:** Never trust the client. The server is the source of truth.
+
+    ---
+
+    ## pc-games
+
+    # PC/Console Game Development
+
+    > Engine selection and platform-specific principles.
+
+    ---
+
+    ## 1. Engine Selection
+
+    ### Decision Tree
+
+    ```
+    What are you building?
+    │
+    ├── 2D Game
+    │   ├── Open source important? → Godot
+    │   └── Large team/assets? → Unity
+    │
+    ├── 3D Game
+    │   ├── AAA visual quality? → Unreal
+    │   ├── Cross-platform priority? → Unity
+    │   └── Indie/open source? → Godot 4
+    │
+    └── Specific Needs
+        ├── DOTS performance? → Unity
+        ├── Nanite/Lumen? → Unreal
+        └── Lightweight? → Godot
+    ```
+
+    ### Comparison
+
+    | Factor | Unity 6 | Godot 4 | Unreal 5 |
+    |--------|---------|---------|----------|
+    | 2D | Good | Excellent | Limited |
+    | 3D | Good | Good | Excellent |
+    | Learning | Medium | Easy | Hard |
+    | Cost | Revenue share | Free | 5% after $1M |
+    | Team | Any | Solo-Medium | Medium-Large |
+
+    ---
+
+    ## 2. Platform Features
+
+    ### Steam Integration
+
+    | Feature | Purpose |
+    |---------|---------|
+    | Achievements | Player goals |
+    | Cloud Saves | Cross-device progress |
+    | Leaderboards | Competition |
+    | Workshop | User mods |
+    | Rich Presence | Show in-game status |
+
+    ### Console Requirements
+
+    | Platform | Certification |
+    |----------|--------------|
+    | PlayStation | TRC compliance |
+    | Xbox | XR compliance |
+    | Nintendo | Lotcheck |
+
+    ---
+
+    ## 3. Controller Support
+
+    ### Input Abstraction
+
+    ```
+    Map ACTIONS, not buttons:
+    - "confirm" → A (Xbox), Cross (PS), B (Nintendo)
+    - "cancel" → B (Xbox), Circle (PS), A (Nintendo)
+    ```
+
+    ### Haptic Feedback
+
+    | Intensity | Use |
+    |-----------|-----|
+    | Light | UI feedback |
+    | Medium | Impacts |
+    | Heavy | Major events |
+
+    ---
+
+    ## 4. Performance Optimization
+
+    ### Profiling First
+
+    | Engine | Tool |
+    |--------|------|
+    | Unity | Profiler Window |
+    | Godot | Debugger → Profiler |
+    | Unreal | Unreal Insights |
+
+    ### Common Bottlenecks
+
+    | Bottleneck | Solution |
+    |------------|----------|
+    | Draw calls | Batching, atlases |
+    | GC spikes | Object pooling |
+    | Physics | Simpler colliders |
+    | Shaders | LOD shaders |
+
+    ---
+
+    ## 5. Engine-Specific Principles
+
+    ### Unity 6
+
+    - DOTS for performance-critical systems
+    - Burst compiler for hot paths
+    - Addressables for asset streaming
+
+    ### Godot 4
+
+    - GDScript for rapid iteration
+    - C# for complex logic
+    - Signals for decoupling
+
+    ### Unreal 5
+
+    - Blueprint for designers
+    - C++ for performance
+    - Nanite for high-poly environments
+    - Lumen for dynamic lighting
+
+    ---
+
+    ## 6. Anti-Patterns
+
+    | ❌ Don't | ✅ Do |
+    |----------|-------|
+    | Choose engine by hype | Choose by project needs |
+    | Ignore platform guidelines | Study certification requirements |
+    | Hardcode input buttons | Abstract to actions |
+    | Skip profiling | Profile early and often |
+
+    ---
+
+    > **Remember:** Engine is a tool. Master the principles, then adapt to any engine.
+
+    ---
+
+    ## vr-ar
+
+    # VR/AR Development
+
+    > Immersive experience principles.
+
+    ---
+
+    ## 1. Platform Selection
+
+    ### VR Platforms
+
+    | Platform | Use Case |
+    |----------|----------|
+    | **Quest** | Standalone, wireless |
+    | **PCVR** | High fidelity |
+    | **PSVR** | Console market |
+    | **WebXR** | Browser-based |
+
+    ### AR Platforms
+
+    | Platform | Use Case |
+    |----------|----------|
+    | **ARKit** | iOS devices |
+    | **ARCore** | Android devices |
+    | **WebXR** | Browser AR |
+    | **HoloLens** | Enterprise |
+
+    ---
+
+    ## 2. Comfort Principles
+
+    ### Motion Sickness Prevention
+
+    | Cause | Solution |
+    |-------|----------|
+    | **Locomotion** | Teleport, snap turn |
+    | **Low FPS** | Maintain 90 FPS |
+    | **Camera shake** | Avoid or minimize |
+    | **Rapid acceleration** | Gradual movement |
+
+    ### Comfort Settings
+
+    - Vignette during movement
+    - Snap vs smooth turning
+    - Seated vs standing modes
+    - Height calibration
+
+    ---
+
+    ## 3. Performance Requirements
+
+    ### Target Metrics
+
+    | Platform | FPS | Resolution |
+    |----------|-----|------------|
+    | Quest 2 | 72-90 | 1832x1920 |
+    | Quest 3 | 90-120 | 2064x2208 |
+    | PCVR | 90 | 2160x2160+ |
+    | PSVR2 | 90-120 | 2000x2040 |
+
+    ### Frame Budget
+
+    - VR requires consistent frame times
+    - Single dropped frame = visible judder
+    - 90 FPS = 11.11ms budget
+
+    ---
+
+    ## 4. Interaction Principles
+
+    ### Controller Interaction
+
+    | Type | Use |
+    |------|-----|
+    | **Point + click** | UI, distant objects |
+    | **Grab** | Manipulation |
+    | **Gesture** | Magic, special actions |
+    | **Physical** | Throwing, swinging |
+
+    ### Hand Tracking
+
+    - More immersive but less precise
+    - Good for: social, casual
+    - Challenging for: action, precision
+
+    ---
+
+    ## 5. Spatial Design
+
+    ### World Scale
+
+    - 1 unit = 1 meter (critical)
+    - Objects must feel right size
+    - Test with real measurements
+
+    ### Depth Cues
+
+    | Cue | Importance |
+    |-----|------------|
+    | Stereo | Primary depth |
+    | Motion parallax | Secondary |
+    | Shadows | Grounding |
+    | Occlusion | Layering |
+
+    ---
+
+    ## 6. Anti-Patterns
+
+    | ❌ Don't | ✅ Do |
+    |----------|-------|
+    | Move camera without player | Player controls camera |
+    | Drop below 90 FPS | Maintain frame rate |
+    | Use tiny UI text | Large, readable text |
+    | Ignore arm length | Scale to player reach |
+
+    ---
+
+    > **Remember:** Comfort is not optional. Sick players don't play.
+
+    ---
+
+    ## web-games
+
+    # Web Browser Game Development
+
+    > Framework selection and browser-specific principles.
+
+    ---
+
+    ## 1. Framework Selection
+
+    ### Decision Tree
+
+    ```
+    What type of game?
+    │
+    ├── 2D Game
+    │   ├── Full game engine features? → Phaser
+    │   └── Raw rendering power? → PixiJS
+    │
+    ├── 3D Game
+    │   ├── Full engine (physics, XR)? → Babylon.js
+    │   └── Rendering focused? → Three.js
+    │
+    └── Hybrid / Canvas
+        └── Custom → Raw Canvas/WebGL
+    ```
+
+    ### Comparison (2025)
+
+    | Framework | Type | Best For |
+    |-----------|------|----------|
+    | **Phaser 4** | 2D | Full game features |
+    | **PixiJS 8** | 2D | Rendering, UI |
+    | **Three.js** | 3D | Visualizations, lightweight |
+    | **Babylon.js 7** | 3D | Full engine, XR |
+
+    ---
+
+    ## 2. WebGPU Adoption
+
+    ### Browser Support (2025)
+
+    | Browser | Support |
+    |---------|---------|
+    | Chrome | ✅ Since v113 |
+    | Edge | ✅ Since v113 |
+    | Firefox | ✅ Since v131 |
+    | Safari | ✅ Since 18.0 |
+    | **Total** | **~73%** global |
+
+    ### Decision
+
+    - **New projects**: Use WebGPU with WebGL fallback
+    - **Legacy support**: Start with WebGL
+    - **Feature detection**: Check `navigator.gpu`
+
+    ---
+
+    ## 3. Performance Principles
+
+    ### Browser Constraints
+
+    | Constraint | Strategy |
+    |------------|----------|
+    | No local file access | Asset bundling, CDN |
+    | Tab throttling | Pause when hidden |
+    | Mobile data limits | Compress assets |
+    | Audio autoplay | Require user interaction |
+
+    ### Optimization Priority
+
+    1. **Asset compression** - KTX2, Draco, WebP
+    2. **Lazy loading** - Load on demand
+    3. **Object pooling** - Avoid GC
+    4. **Draw call batching** - Reduce state changes
+    5. **Web Workers** - Offload heavy computation
+
+    ---
+
+    ## 4. Asset Strategy
+
+    ### Compression Formats
+
+    | Type | Format |
+    |------|--------|
+    | Textures | KTX2 + Basis Universal |
+    | Audio | WebM/Opus (fallback: MP3) |
+    | 3D Models | glTF + Draco/Meshopt |
+
+    ### Loading Strategy
+
+    | Phase | Load |
+    |-------|------|
+    | Startup | Core assets, <2MB |
+    | Gameplay | Stream on demand |
+    | Background | Prefetch next level |
+
+    ---
+
+    ## 5. PWA for Games
+
+    ### Benefits
+
+    - Offline play
+    - Install to home screen
+    - Full screen mode
+    - Push notifications
+
+    ### Requirements
+
+    - Service worker for caching
+    - Web app manifest
+    - HTTPS
+
+    ---
+
+    ## 6. Audio Handling
+
+    ### Browser Requirements
+
+    - Audio context requires user interaction
+    - Create AudioContext on first click/tap
+    - Resume context if suspended
+
+    ### Best Practices
+
+    - Use Web Audio API
+    - Pool audio sources
+    - Preload common sounds
+    - Compress with WebM/Opus
+
+    ---
+
+    ## 7. Anti-Patterns
+
+    | ❌ Don't | ✅ Do |
+    |----------|-------|
+    | Load all assets upfront | Progressive loading |
+    | Ignore tab visibility | Pause when hidden |
+    | Block on audio load | Lazy load audio |
+    | Skip compression | Compress everything |
+    | Assume fast connection | Handle slow networks |
+
+    ---
+
+    > **Remember:** Browser is the most accessible platform. Respect its constraints.
+edges:
+- to: app-builder
+  type: collaborates_with

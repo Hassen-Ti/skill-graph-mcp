@@ -1,0 +1,104 @@
+id: stitch-ui-design
+name: stitch-ui-design
+type: domain
+author: sklills_lib
+version: 1.0.0
+description: Expert guide for creating effective prompts for Google Stitch AI UI design tool. Use when user wants to design
+  UI/UX in Stitch, create app interfaces, generate mobile/web designs, or needs help crafting Stitch prompts. Covers prompt
+  structure, specificity techniques, iteration strategies, and design-to-code workflows for Stitch by Google.
+priority: 2
+payload:
+  instructions: "# Stitch UI Design Prompting\n\nExpert guidance for crafting effective prompts in Google Stitch, the AI-powered\
+    \ UI design tool by Google Labs. This skill helps create precise, actionable prompts that generate high-quality UI designs\
+    \ for web and mobile applications.\n\n## What is Google Stitch?\n\nGoogle Stitch is an experimental AI UI generator powered\
+    \ by Gemini 2.5 Flash that transforms text prompts and visual references into functional UI designs. It supports:\n\n\
+    - Text-to-UI generation from natural language prompts\n- Image-to-UI conversion from sketches, wireframes, or screenshots\n\
+    - Multi-screen app flows and responsive layouts\n- Export to HTML/CSS, Figma, and code\n- Iterative refinement with variants\
+    \ and annotations\n\n## Core Prompting Principles\n\n### 1. Be Specific and Detailed\n\nGeneric prompts yield generic\
+    \ results. Specific prompts with clear requirements produce tailored, professional designs.\n\n**Poor prompt:**\n```\n\
+    Create a dashboard\n```\n\n**Effective prompt:**\n```\nMember dashboard with course modules grid, progress tracking bar,\
+    \ \nand community feed sidebar using purple theme and card-based layout\n```\n\n**Why it works:** Specifies components\
+    \ (modules, progress, feed), layout structure (grid, sidebar), visual style (purple theme, cards), and context (member\
+    \ dashboard).\n\n### 2. Define Visual Style and Theme\n\nAlways include color schemes, design aesthetics, and visual direction\
+    \ to avoid generic AI outputs.\n\n**Components to specify:**\n- Color palette (primary colors, accent colors)\n- Design\
+    \ style (minimalist, modern, playful, professional, glassmorphic)\n- Typography preferences (if any)\n- Spacing and density\
+    \ (compact, spacious, balanced)\n\n**Example:**\n```\nE-commerce product page with hero image gallery, add-to-cart CTA,\
+    \ \nreviews section, and related products carousel. Use clean minimalist \ndesign with sage green accents and generous\
+    \ white space.\n```\n\n### 3. Structure Multi-Screen Flows Clearly\n\nFor apps with multiple screens, list each screen\
+    \ as bullet points before generation.\n\n**Approach:**\n```\nFitness tracking app with:\n- Onboarding screen with goal\
+    \ selection\n- Home dashboard with daily stats and activity rings\n- Workout library with category filters\n- Profile\
+    \ screen with achievements and settings\n```\n\nStitch will ask for confirmation before generating multiple screens, ensuring\
+    \ alignment with your vision.\n\n### 4. Specify Platform and Responsive Behavior\n\nIndicate whether the design is for\
+    \ mobile, tablet, desktop, or responsive web.\n\n**Examples:**\n```\nMobile app login screen (iOS style) with email/password\
+    \ fields and social auth buttons\n\nResponsive landing page that adapts from mobile (320px) to desktop (1440px) \nwith\
+    \ collapsible navigation\n```\n\n### 5. Include Functional Requirements\n\nDescribe interactive elements, states, and\
+    \ user flows to generate more complete designs.\n\n**Elements to specify:**\n- Button actions and CTAs\n- Form fields\
+    \ and validation\n- Navigation patterns\n- Loading states\n- Empty states\n- Error handling\n\n**Example:**\n```\nCheckout\
+    \ flow with:\n- Cart summary with quantity adjusters\n- Shipping address form with validation\n- Payment method selection\
+    \ (cards, PayPal, Apple Pay)\n- Order confirmation with tracking number\n```\n\n## Prompt Structure Template\n\nUse this\
+    \ template for comprehensive prompts:\n\n```\n[Screen/Component Type] for [User/Context]\n\nKey Features:\n- [Feature\
+    \ 1 with specific details]\n- [Feature 2 with specific details]\n- [Feature 3 with specific details]\n\nVisual Style:\n\
+    - [Color scheme]\n- [Design aesthetic]\n- [Layout approach]\n\nPlatform: [Mobile/Web/Responsive]\n```\n\n**Example:**\n\
+    ```\nDashboard for SaaS analytics platform\n\nKey Features:\n- Top metrics cards showing MRR, active users, churn rate\n\
+    - Line chart for revenue trends (last 30 days)\n- Recent activity feed with user actions\n- Quick action buttons for reports\
+    \ and exports\n\nVisual Style:\n- Dark mode with blue/purple gradient accents\n- Modern glassmorphic cards with subtle\
+    \ shadows\n- Clean data visualization with accessible colors\n\nPlatform: Responsive web (desktop-first)\n```\n\n## Iteration\
+    \ Strategies\n\n### Refine with Annotations\n\nUse Stitch's \"annotate to edit\" feature to make targeted changes without\
+    \ rewriting the entire prompt.\n\n**Workflow:**\n1. Generate initial design from prompt\n2. Annotate specific elements\
+    \ that need changes\n3. Describe modifications in natural language\n4. Stitch updates only the annotated areas\n\n**Example\
+    \ annotations:**\n- \"Make this button larger and use primary color\"\n- \"Add more spacing between these cards\"\n- \"\
+    Change this to a horizontal layout\"\n\n### Generate Variants\n\nRequest multiple variations to explore different design\
+    \ directions:\n\n```\nGenerate 3 variants of this hero section:\n1. Image-focused with minimal text\n2. Text-heavy with\
+    \ supporting graphics\n3. Video background with overlay content\n```\n\n### Progressive Refinement\n\nStart broad, then\
+    \ add specificity in follow-up prompts:\n\n**Initial:**\n```\nE-commerce homepage\n```\n\n**Refinement 1:**\n```\nAdd\
+    \ featured products section with 4-column grid and hover effects\n```\n\n**Refinement 2:**\n```\nUpdate color scheme to\
+    \ earth tones (terracotta, sage, cream) \nand add promotional banner at top\n```\n\n## Common Use Cases\n\n### Landing\
+    \ Pages\n\n```\nSaaS landing page for [product name]\n\nSections:\n- Hero with headline, subheadline, CTA, and product\
+    \ screenshot\n- Social proof with customer logos\n- Features grid (3 columns) with icons\n- Testimonials carousel\n- Pricing\
+    \ table (3 tiers)\n- FAQ accordion\n- Footer with links and newsletter signup\n\nStyle: Modern, professional, trust-building\n\
+    Colors: Navy blue primary, light blue accents, white background\n```\n\n### Mobile Apps\n\n```\nFood delivery app home\
+    \ screen\n\nComponents:\n- Search bar with location selector\n- Category chips (Pizza, Burgers, Sushi, etc.)\n- Restaurant\
+    \ cards with image, name, rating, delivery time, and price range\n- Bottom navigation (Home, Search, Orders, Profile)\n\
+    \nStyle: Vibrant, appetite-appealing, easy to scan\nColors: Orange primary, white background, food photography\nPlatform:\
+    \ iOS mobile (375px width)\n```\n\n### Dashboards\n\n```\nAdmin dashboard for content management system\n\nLayout:\n-\
+    \ Left sidebar navigation with collapsible menu\n- Top bar with search, notifications, and user profile\n- Main content\
+    \ area with:\n  - Stats overview (4 metric cards)\n  - Recent posts table with actions\n  - Activity timeline\n  - Quick\
+    \ actions panel\n\nStyle: Clean, data-focused, professional\nColors: Neutral grays with blue accents\nPlatform: Desktop\
+    \ web (1440px)\n```\n\n### Forms and Inputs\n\n```\nMulti-step signup form for B2B platform\n\nSteps:\n1. Account details\
+    \ (company name, email, password)\n2. Company information (industry, size, role)\n3. Team setup (invite members)\n4. Confirmation\
+    \ with success message\n\nFeatures:\n- Progress indicator at top\n- Field validation with inline errors\n- Back/Next navigation\n\
+    - Skip option for step 3\n\nStyle: Minimal, focused, low-friction\nColors: White background, green for success states\n\
+    ```\n\n## Design-to-Code Workflow\n\n### Export Options\n\nStitch provides multiple export formats:\n\n1. **HTML/CSS**\
+    \ - Clean, semantic markup for web projects\n2. **Figma** - \"Paste to Figma\" for design system integration\n3. **Code\
+    \ snippets** - Component-level exports for frameworks\n\n### Best Practices for Export\n\n**Before exporting:**\n- Verify\
+    \ responsive breakpoints\n- Check color contrast for accessibility\n- Ensure interactive states are defined\n- Review\
+    \ component naming and structure\n\n**After export:**\n- Refactor generated code for production standards\n- Add proper\
+    \ semantic HTML tags\n- Implement accessibility attributes (ARIA labels, alt text)\n- Optimize images and assets\n- Add\
+    \ animations and micro-interactions\n\n## Anti-Patterns to Avoid\n\n### ❌ Vague Prompts\n```\nMake a nice website\n```\n\
+    \n### ✅ Specific Prompts\n```\nPortfolio website for photographer with full-screen image gallery, \nproject case studies,\
+    \ and contact form. Minimalist black and white \naesthetic with serif typography.\n```\n\n---\n\n### ❌ Missing Context\n\
+    ```\nCreate a login page\n```\n\n### ✅ Context-Rich Prompts\n```\nLogin page for healthcare portal with email/password\
+    \ fields, \n\"Remember me\" checkbox, \"Forgot password\" link, and SSO options \n(Google, Microsoft). Professional, trustworthy\
+    \ design with \nblue medical theme.\n```\n\n---\n\n### ❌ No Visual Direction\n```\nDesign an app for task management\n\
+    ```\n\n### ✅ Clear Visual Direction\n```\nTask management app with kanban board layout, drag-and-drop cards, \npriority\
+    \ labels, and due date indicators. Modern, productivity-focused \ndesign with purple/teal gradient accents and dark mode\
+    \ support.\n```\n\n## Tips for Better Results\n\n1. **Reference existing designs** - Upload screenshots or sketches as\
+    \ visual references alongside text prompts\n\n2. **Use design terminology** - Terms like \"hero section,\" \"card layout,\"\
+    \ \"glassmorphic,\" \"bento grid\" help Stitch understand your intent\n\n3. **Specify interactions** - Describe hover\
+    \ states, click actions, and transitions for more complete designs\n\n4. **Think in components** - Break complex screens\
+    \ into reusable components (header, card, form, etc.)\n\n5. **Iterate incrementally** - Make small, focused changes rather\
+    \ than complete redesigns\n\n6. **Test responsiveness** - Always verify designs at multiple breakpoints (mobile, tablet,\
+    \ desktop)\n\n7. **Consider accessibility** - Mention color contrast, font sizes, and touch target sizes in prompts\n\n\
+    8. **Leverage variants** - Generate multiple options to explore different design directions quickly\n\n## Integration\
+    \ with Development Workflow\n\n### Stitch → Figma → Code\n1. Generate UI in Stitch with detailed prompts\n2. Export to\
+    \ Figma for design system integration\n3. Hand off to developers with design specs\n4. Implement with production-ready\
+    \ code\n\n### Stitch → HTML → Framework\n1. Generate and refine UI in Stitch\n2. Export HTML/CSS code\n3. Convert to React/Vue/Svelte\
+    \ components\n4. Integrate into application codebase\n\n### Rapid Prototyping\n1. Create multiple screen variations quickly\n\
+    2. Test with users or stakeholders\n3. Iterate based on feedback\n4. Finalize design for development\n\n## Conclusion\n\
+    \nEffective Stitch prompts are specific, context-rich, and visually descriptive. By following these principles and templates,\
+    \ you can generate professional UI designs that serve as strong foundations for production applications.\n\n**Remember:**\
+    \ Stitch is a starting point, not a final product. Use it to accelerate the design process, explore ideas quickly, and\
+    \ establish visual direction—then refine with human judgment and production standards."
+edges:
+- to: prompt-engineering
+  type: collaborates_with

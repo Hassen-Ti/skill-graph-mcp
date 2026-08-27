@@ -1,0 +1,74 @@
+id: design-md
+name: design-md
+type: domain
+author: sklills_lib
+version: 1.0.0
+description: Analyze Stitch projects and synthesize a semantic design system into DESIGN.md files
+priority: 2
+payload:
+  instructions: "# Stitch DESIGN.md Skill\n\nYou are an expert Design Systems Lead. Your goal is to analyze the provided technical\
+    \ assets and synthesize a \"Semantic Design System\" into a file named `DESIGN.md`.\n\n## When to Use This Skill\n\nUse\
+    \ this skill when:\n- Analyzing Stitch projects\n- Creating DESIGN.md files\n- Synthesizing semantic design systems\n\
+    - Working with Stitch design language\n- Generating design documentation for Stitch projects\n\n## Overview\n\nThis skill\
+    \ helps you create `DESIGN.md` files that serve as the \"source of truth\" for prompting Stitch to generate new screens\
+    \ that align perfectly with existing design language. Stitch interprets design through \"Visual Descriptions\" supported\
+    \ by specific color values.\n\n## Prerequisites\n\n- Access to the Stitch MCP Server\n- A Stitch project with at least\
+    \ one designed screen\n- Access to the Stitch Effective Prompting Guide: https://stitch.withgoogle.com/docs/learn/prompting/\n\
+    \n## The Goal\n\nThe `DESIGN.md` file will serve as the \"source of truth\" for prompting Stitch to generate new screens\
+    \ that align perfectly with the existing design language. Stitch interprets design through \"Visual Descriptions\" supported\
+    \ by specific color values.\n\n## Retrieval and Networking\n\nTo analyze a Stitch project, you must retrieve screen metadata\
+    \ and design assets using the Stitch MCP Server tools:\n\n1. **Namespace discovery**: Run `list_tools` to find the Stitch\
+    \ MCP prefix. Use this prefix (e.g., `mcp_stitch:`) for all subsequent calls.\n\n2. **Project lookup** (if Project ID\
+    \ is not provided):\n   - Call `[prefix]:list_projects` with `filter: \"view=owned\"` to retrieve all user projects\n\
+    \   - Identify the target project by title or URL pattern\n   - Extract the Project ID from the `name` field (e.g., `projects/13534454087919359824`)\n\
+    \n3. **Screen lookup** (if Screen ID is not provided):\n   - Call `[prefix]:list_screens` with the `projectId` (just the\
+    \ numeric ID, not the full path)\n   - Review screen titles to identify the target screen (e.g., \"Home\", \"Landing Page\"\
+    )\n   - Extract the Screen ID from the screen's `name` field\n\n4. **Metadata fetch**: \n   - Call `[prefix]:get_screen`\
+    \ with both `projectId` and `screenId` (both as numeric IDs only)\n   - This returns the complete screen object including:\n\
+    \     - `screenshot.downloadUrl` - Visual reference of the design\n     - `htmlCode.downloadUrl` - Full HTML/CSS source\
+    \ code\n     - `width`, `height`, `deviceType` - Screen dimensions and target platform\n     - Project metadata including\
+    \ `designTheme` with color and style information\n\n5. **Asset download**:\n   - Use `web_fetch` or `read_url_content`\
+    \ to download the HTML code from `htmlCode.downloadUrl`\n   - Optionally download the screenshot from `screenshot.downloadUrl`\
+    \ for visual reference\n   - Parse the HTML to extract Tailwind classes, custom CSS, and component patterns\n\n6. **Project\
+    \ metadata extraction**:\n   - Call `[prefix]:get_project` with the project `name` (full path: `projects/{id}`) to get:\n\
+    \     - `designTheme` object with color mode, fonts, roundness, custom colors\n     - Project-level design guidelines\
+    \ and descriptions\n     - Device type preferences and layout principles\n\n## Analysis & Synthesis Instructions\n\n###\
+    \ 1. Extract Project Identity (JSON)\n- Locate the Project Title\n- Locate the specific Project ID (e.g., from the `name`\
+    \ field in the JSON)\n\n### 2. Define the Atmosphere (Image/HTML)\nEvaluate the screenshot and HTML structure to capture\
+    \ the overall \"vibe.\" Use evocative adjectives to describe the mood (e.g., \"Airy,\" \"Dense,\" \"Minimalist,\" \"Utilitarian\"\
+    ).\n\n### 3. Map the Color Palette (Tailwind Config/JSON)\nIdentify the key colors in the system. For each color, provide:\n\
+    - A descriptive, natural language name that conveys its character (e.g., \"Deep Muted Teal-Navy\")\n- The specific hex\
+    \ code in parentheses for precision (e.g., \"#294056\")\n- Its specific functional role (e.g., \"Used for primary actions\"\
+    )\n\n### 4. Translate Geometry & Shape (CSS/Tailwind)\nConvert technical `border-radius` and layout values into physical\
+    \ descriptions:\n- Describe `rounded-full` as \"Pill-shaped\"\n- Describe `rounded-lg` as \"Subtly rounded corners\"\n\
+    - Describe `rounded-none` as \"Sharp, squared-off edges\"\n\n### 5. Describe Depth & Elevation\nExplain how the UI handles\
+    \ layers. Describe the presence and quality of shadows (e.g., \"Flat,\" \"Whisper-soft diffused shadows,\" or \"Heavy,\
+    \ high-contrast drop shadows\").\n\n## Output Guidelines\n\n- **Language:** Use descriptive design terminology and natural\
+    \ language exclusively\n- **Format:** Generate a clean Markdown file following the structure below\n- **Precision:** Include\
+    \ exact hex codes for colors while using descriptive names\n- **Context:** Explain the \"why\" behind design decisions,\
+    \ not just the \"what\"\n\n## Output Format (DESIGN.md Structure)\n\n```markdown\n# Design System: [Project Title]\n**Project\
+    \ ID:** [Insert Project ID Here]\n\n## 1. Visual Theme & Atmosphere\n(Description of the mood, density, and aesthetic\
+    \ philosophy.)\n\n## 2. Color Palette & Roles\n(List colors by Descriptive Name + Hex Code + Functional Role.)\n\n## 3.\
+    \ Typography Rules\n(Description of font family, weight usage for headers vs. body, and letter-spacing character.)\n\n\
+    ## 4. Component Stylings\n* **Buttons:** (Shape description, color assignment, behavior).\n* **Cards/Containers:** (Corner\
+    \ roundness description, background color, shadow depth).\n* **Inputs/Forms:** (Stroke style, background).\n\n## 5. Layout\
+    \ Principles\n(Description of whitespace strategy, margins, and grid alignment.)\n```\n\n## Usage Example\n\nTo use this\
+    \ skill for the Furniture Collection project:\n\n1. **Retrieve project information:**\n   ```\n   Use the Stitch MCP Server\
+    \ to get the Furniture Collection project\n   ```\n\n2. **Get the Home page screen details:**\n   ```\n   Retrieve the\
+    \ Home page screen's code, image, and screen object information\n   ```\n\n3. **Reference best practices:**\n   ```\n\
+    \   Review the Stitch Effective Prompting Guide at:\n   https://stitch.withgoogle.com/docs/learn/prompting/\n   ```\n\n\
+    4. **Analyze and synthesize:**\n   - Extract all relevant design tokens from the screen\n   - Translate technical values\
+    \ into descriptive language\n   - Organize information according to the DESIGN.md structure\n\n5. **Generate the file:**\n\
+    \   - Create `DESIGN.md` in the project directory\n   - Follow the prescribed format exactly\n   - Ensure all color codes\
+    \ are accurate\n   - Use evocative, designer-friendly language\n\n## Best Practices\n\n- **Be Descriptive:** Avoid generic\
+    \ terms like \"blue\" or \"rounded.\" Use \"Ocean-deep Cerulean (#0077B6)\" or \"Gently curved edges\"\n- **Be Functional:**\
+    \ Always explain what each design element is used for\n- **Be Consistent:** Use the same terminology throughout the document\n\
+    - **Be Visual:** Help readers visualize the design through your descriptions\n- **Be Precise:** Include exact values (hex\
+    \ codes, pixel values) in parentheses after natural language descriptions\n\n## Tips for Success\n\n1. **Start with the\
+    \ big picture:** Understand the overall aesthetic before diving into details\n2. **Look for patterns:** Identify consistent\
+    \ spacing, sizing, and styling patterns\n3. **Think semantically:** Name colors by their purpose, not just their appearance\n\
+    4. **Consider hierarchy:** Document how visual weight and importance are communicated\n5. **Reference the guide:** Use\
+    \ language and patterns from the Stitch Effective Prompting Guide\n\n## Common Pitfalls to Avoid\n\n- ❌ Using technical\
+    \ jargon without translation (e.g., \"rounded-xl\" instead of \"generously rounded corners\")\n- ❌ Omitting color codes\
+    \ or using only descriptive names\n- ❌ Forgetting to explain functional roles of design elements\n- ❌ Being too vague\
+    \ in atmosphere descriptions\n- ❌ Ignoring subtle design details like shadows or spacing patterns"
