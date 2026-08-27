@@ -100,6 +100,12 @@ cd skill-graph-mcp
 pip install -e .
 ```
 
+For a reproducible install pinned to the exact versions in `uv.lock`, use [uv](https://docs.astral.sh/uv/) instead:
+
+```bash
+uv sync
+```
+
 ### 2. Configure environment
 
 ```bash
