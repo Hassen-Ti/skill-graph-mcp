@@ -8,6 +8,7 @@ import sys
 from pathlib import Path
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(name)s - %(message)s")
+logging.getLogger("neo4j.notifications").setLevel(logging.WARNING)
 logger = logging.getLogger(__name__)
 
 
@@ -19,6 +20,10 @@ def _build_parser() -> argparse.ArgumentParser:
     load_cmd.add_argument("--dry-run", action="store_true", default=False)
     load_cmd.add_argument("--schema", type=Path, default=None)
     sub.add_parser("reindex", help="Drop and recreate the Neo4j vector index (required after changing embedding dims).")
+    link_cmd = sub.add_parser("link", help="Generate COLLABORATES_WITH edges by embedding similarity (safe to rerun).")
+    link_cmd.add_argument("--top-k", type=int, default=5)
+    link_cmd.add_argument("--threshold", type=float, default=0.75)
+    link_cmd.add_argument("--dry-run", action="store_true", default=False)
     return parser
 
 
@@ -66,11 +71,32 @@ async def _run_reindex() -> None:
         await driver.close()
 
 
+async def _run_link(top_k: int, threshold: float, dry_run: bool) -> None:
+    from neo4j import AsyncGraphDatabase
+    from core.neo4j_client import Neo4jClient
+    from registry import similarity
+    uri = os.getenv("NEO4J_URI", "bolt://localhost:7687")
+    user = os.getenv("NEO4J_USER", "neo4j")
+    password = os.getenv("NEO4J_PASSWORD", "skillgraph")
+    driver = AsyncGraphDatabase.driver(uri, auth=(user, password))
+    client = Neo4jClient(driver)
+    try:
+        stats = await similarity.link_similar_skills(
+            client, top_k=top_k, threshold=threshold, dry_run=dry_run,
+        )
+        logger.info("Link complete: %s", stats)
+    finally:
+        await driver.close()
+
+
 def main() -> None:
     parser = _build_parser()
     args = parser.parse_args()
     if args.command == "reindex":
         asyncio.run(_run_reindex())
+        return
+    if args.command == "link":
+        asyncio.run(_run_link(args.top_k, args.threshold, args.dry_run))
         return
     skills_dir: Path = args.skills_dir.resolve()
     if not skills_dir.is_dir():
