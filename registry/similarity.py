@@ -37,7 +37,7 @@ async def link_similar_skills(
                 continue
             if dry_run:
                 pair = frozenset((skill_id, n["id"]))
-                if pair in pending_pairs or await client.edge_exists(skill_id, n["id"]):
+                if pair in pending_pairs or await client.manual_edge_exists(skill_id, n["id"]):
                     stats["skipped_existing"] += 1
                 else:
                     stats["created"] += 1

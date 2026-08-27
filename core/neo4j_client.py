@@ -80,7 +80,8 @@ class Neo4jClient:
         edge_type = edge_type.upper()
         query = (
             f"MATCH (a:Skill {{id: $from_id}}), (b:Skill {{id: $to_id}}) "
-            f"MERGE (a)-[:{edge_type}]->(b)"
+            f"MERGE (a)-[r:{edge_type}]->(b) "
+            f"REMOVE r.source, r.score"
         )
         await self._run(query, {"from_id": from_id, "to_id": to_id})
 
@@ -160,10 +161,11 @@ class Neo4jClient:
             {"index": VECTOR_INDEX_NAME, "k": k, "embedding": embedding},
         )
 
-    async def edge_exists(self, from_id: str, to_id: str) -> bool:
+    async def manual_edge_exists(self, from_id: str, to_id: str) -> bool:
+        """True if a pair is connected by an edge that would survive delete_similarity_edges()."""
         records = await self._run(
             "MATCH (a:Skill {id: $from_id}), (b:Skill {id: $to_id}) "
-            "RETURN EXISTS { (a)-[]-(b) } AS exists",
+            "RETURN EXISTS { (a)-[r]-(b) WHERE r.source IS NULL OR r.source <> 'similarity' } AS exists",
             {"from_id": from_id, "to_id": to_id},
         )
         return bool(records and records[0]["exists"])
