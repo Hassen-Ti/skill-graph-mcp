@@ -185,6 +185,37 @@ def enrich_skill(skill_id: str, dry_run: bool = False) -> str:
     return f"CREATE {skill_id}"
 
 
+def _prune_dangling_edges(removed_ids: set[str], dry_run: bool = False) -> None:
+    """Strip edges pointing at IDs about to be deleted, from every YAML that survives.
+
+    Without this, deleting an orphan/inlined skill leaves other skills' curated
+    `edges:` pointing at a now-missing ID, which registry/loader.py's orphan-edge
+    check rejects at load time.
+    """
+    for yaml_path in sorted(STAGING_DIR.glob("*.yaml")):
+        if yaml_path.stem in removed_ids:
+            continue
+        data = yaml.safe_load(yaml_path.read_text(encoding="utf-8")) or {}
+        edges = data.get("edges")
+        if not edges:
+            continue
+        kept = [e for e in edges if e.get("to") not in removed_ids]
+        if len(kept) == len(edges):
+            continue
+        dropped = [e["to"] for e in edges if e.get("to") in removed_ids]
+        print(f"  PRUNE  {yaml_path.name} -- dropping edges to {dropped}")
+        if dry_run:
+            continue
+        if kept:
+            data["edges"] = kept
+        else:
+            data.pop("edges", None)
+        instructions = (data.get("payload") or {}).get("instructions")
+        if instructions is not None:
+            data["payload"]["instructions"] = _LiteralStr(instructions)
+        yaml_path.write_text(_dump_yaml(data), encoding="utf-8")
+
+
 def clean_staging(dry_run: bool = False) -> None:
     """Remove staging YAMLs that have no source in the lib (orphans + inlined sub-skills)."""
     lib_root_ids = {
@@ -195,6 +226,8 @@ def clean_staging(dry_run: bool = False) -> None:
     to_remove = nested_ids | (
         {f.stem for f in STAGING_DIR.glob("*.yaml")} - lib_root_ids
     )
+
+    _prune_dangling_edges(to_remove, dry_run=dry_run)
 
     for skill_id in sorted(to_remove):
         yaml_path = STAGING_DIR / f"{skill_id}.yaml"
