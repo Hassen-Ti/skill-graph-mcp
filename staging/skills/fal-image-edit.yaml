@@ -1,0 +1,29 @@
+id: fal-image-edit
+name: fal-image-edit
+type: domain
+author: sklills_lib
+version: 1.0.0
+description: AI-powered image editing with style transfer and object removal
+priority: 2
+payload:
+  instructions: |-
+    # Fal Image Edit
+
+    ## Overview
+
+    AI-powered image editing with style transfer and object removal
+
+    ## When to Use This Skill
+
+    Use this skill when you need to work with ai-powered image editing with style transfer and object removal.
+
+    ## Instructions
+
+    This skill provides guidance and patterns for ai-powered image editing with style transfer and object removal.
+
+    For more information, see the [source repository](https://github.com/fal-ai-community/skills/blob/main/skills/claude.ai/fal-image-edit/SKILL.md).
+edges:
+- to: fal-upscale
+  type: collaborates_with
+- to: nanobanana-ppt-skills
+  type: collaborates_with

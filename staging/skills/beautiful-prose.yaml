@@ -1,0 +1,24 @@
+id: beautiful-prose
+name: beautiful-prose
+type: tool
+author: sklills_lib
+version: 1.0.0
+description: Hard-edged writing style contract for timeless, forceful English prose without AI tics
+priority: 3
+payload:
+  instructions: |-
+    # Beautiful Prose
+
+    ## Overview
+
+    Hard-edged writing style contract for timeless, forceful English prose without AI tics
+
+    ## When to Use This Skill
+
+    Use this skill when you need to work with hard-edged writing style contract for timeless, forceful english prose without ai tics.
+
+    ## Instructions
+
+    This skill provides guidance and patterns for hard-edged writing style contract for timeless, forceful english prose without ai tics.
+
+    For more information, see the [source repository](https://github.com/SHADOWPR0/beautiful_prose).

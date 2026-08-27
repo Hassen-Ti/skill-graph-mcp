@@ -1,0 +1,173 @@
+id: skill-creator
+name: skill-creator
+type: domain
+author: Eric Andrade
+version: 1.0.0
+description: This skill should be used when the user asks to create a new skill, build a skill, make a custom skill, develop
+  a CLI skill, or wants to extend the CLI with new capabilities. Automates the entire skill creation workflow from brainstorming
+  to installation.
+priority: 2
+payload:
+  instructions: "# skill-creator\n\n## Purpose\n\nTo create new CLI skills following Anthropic's official best practices with\
+    \ zero manual configuration. This skill automates brainstorming, template application, validation, and installation processes\
+    \ while maintaining progressive disclosure patterns and writing style standards.\n\n## When to Use This Skill\n\nThis\
+    \ skill should be used when:\n- User wants to extend CLI functionality with custom capabilities\n- User needs to create\
+    \ a skill following official standards\n- User wants to automate repetitive CLI tasks with a reusable skill\n- User needs\
+    \ to package domain knowledge into a skill format\n- User wants both local and global skill installation options\n\n##\
+    \ Core Capabilities\n\n1. **Interactive Brainstorming** - Collaborative session to define skill purpose and scope\n2.\
+    \ **Prompt Enhancement** - Optional integration with prompt-engineer skill for refinement\n3. **Template Application**\
+    \ - Automatic file generation from standardized templates\n4. **Validation** - YAML, content, and style checks against\
+    \ Anthropic standards\n5. **Installation** - Local repository or global installation with symlinks\n6. **Progress Tracking**\
+    \ - Visual gauge showing completion status at each step\n\n## Step 0: Discovery\n\nBefore starting skill creation, gather\
+    \ runtime information:\n\n```bash\n# Detect available platforms\nCOPILOT_INSTALLED=false\nCLAUDE_INSTALLED=false\nCODEX_INSTALLED=false\n\
+    \nif command -v gh &>/dev/null && gh copilot --version &>/dev/null 2>&1; then\n    COPILOT_INSTALLED=true\nfi\n\nif [[\
+    \ -d \"$HOME/.claude\" ]]; then\n    CLAUDE_INSTALLED=true\nfi\n\nif [[ -d \"$HOME/.codex\" ]]; then\n    CODEX_INSTALLED=true\n\
+    fi\n\n# Determine working directory\nREPO_ROOT=$(git rev-parse --show-toplevel 2>/dev/null || pwd)\nSKILLS_REPO=\"$REPO_ROOT\"\
+    \n\n# Check if in cli-ai-skills repository\nif [[ ! -d \"$SKILLS_REPO/.github/skills\" ]]; then\n    echo \"⚠️  Not in\
+    \ cli-ai-skills repository. Creating standalone skill.\"\n    STANDALONE=true\nfi\n\n# Get user info from git config\n\
+    AUTHOR=$(git config user.name || echo \"Unknown\")\nEMAIL=$(git config user.email || echo \"\")\n```\n\n**Key Information\
+    \ Needed:**\n- Which platforms to target (Copilot, Claude, Codex, or all three)\n- Installation preference (local, global,\
+    \ or both)\n- Skill name and purpose\n- Skill type (general, code, documentation, analysis)\n\n## Main Workflow\n\n###\
+    \ Progress Tracking Guidelines\n\nThroughout the workflow, display a visual progress bar before starting each phase to\
+    \ keep the user informed. The progress bar format is:\n\n```\n[████████████░░░░░░] 60% - Step 3/5: Creating SKILL.md\n\
+    ```\n\n**Format specifications:**\n- 20 characters wide (use █ for filled, ░ for empty)\n- Percentage based on current\
+    \ step (Step 1=20%, Step 2=40%, Step 3=60%, Step 4=80%, Step 5=100%)\n- Step counter showing current/total (e.g., \"Step\
+    \ 3/5\")\n- Brief description of current phase\n\n**Display the progress bar using:**\n```bash\necho \"[████░░░░░░░░░░░░░░]\
+    \ 20% - Step 1/5: Brainstorming & Planning\"\n```\n\n### Phase 1: Brainstorming & Planning\n\n**Progress:** Display before\
+    \ starting this phase:\n```bash\necho \"[████░░░░░░░░░░░░░░] 20% - Step 1/5: Brainstorming & Planning\"\n```\n\nDisplay\
+    \ progress:\n```\n╔══════════════════════════════════════════════════════════════╗\n║     \U0001F6E0️  SKILL CREATOR -\
+    \ Creating New Skill                  ║\n╠══════════════════════════════════════════════════════════════╣\n║ → Phase 1:\
+    \ Brainstorming                 [10%]               ║\n║ ○ Phase 2: Prompt Refinement                                \
+    \ ║\n║ ○ Phase 3: File Generation                                   ║\n║ ○ Phase 4: Validation                       \
+    \                 ║\n║ ○ Phase 5: Installation                                      ║\n╠══════════════════════════════════════════════════════════════╣\n\
+    ║ Progress: ███░░░░░░░░░░░░░░░░░░░░░░░░░░░  10%              ║\n╚══════════════════════════════════════════════════════════════╝\n\
+    ```\n\n**Ask the user:**\n\n1. **What should this skill do?** (Free-form description)\n   - Example: \"Help users debug\
+    \ Python code by analyzing stack traces\"\n   \n2. **When should it trigger?** (Provide 3-5 trigger phrases)\n   - Example:\
+    \ \"debug Python error\", \"analyze stack trace\", \"fix Python exception\"\n\n3. **What type of skill is this?**\n  \
+    \ - [ ] General purpose (default template)\n   - [ ] Code generation/modification\n   - [ ] Documentation creation/maintenance\n\
+    \   - [ ] Analysis/investigation\n\n4. **Which platforms should support this skill?**\n   - [ ] GitHub Copilot CLI\n \
+    \  - [ ] Claude Code\n    - [ ] Codex\n    - [ ] All three (recommended)\n\n5. **Provide a one-sentence description**\
+    \ (will appear in metadata)\n   - Example: \"Analyzes Python stack traces and suggests fixes\"\n\n**Capture responses\
+    \ and prepare for next phase.**\n\n### Phase 2: Prompt Enhancement (Optional)\n\n**Progress:** Display before starting\
+    \ this phase:\n```bash\necho \"[████████░░░░░░░░░░] 40% - Step 2/5: Prompt Enhancement\"\n```\n\nUpdate progress:\n```\n\
+    ╔══════════════════════════════════════════════════════════════╗\n║ ✓ Phase 1: Brainstorming                         \
+    \            ║\n║ → Phase 2: Prompt Refinement             [30%]               ║\n╠══════════════════════════════════════════════════════════════╣\n\
+    ║ Progress: █████████░░░░░░░░░░░░░░░░░░░░░  30%              ║\n╚══════════════════════════════════════════════════════════════╝\n\
+    ```\n\n**Ask the user:**\n\"Would you like to refine the skill description using the prompt-engineer skill?\"\n- [ ] Yes\
+    \ - Use prompt-engineer to enhance clarity and structure\n- [ ] No - Proceed with current description\n\nIf **Yes**:\n\
+    1. Check if prompt-engineer skill is available\n2. Invoke with current description as input\n3. Review enhanced output\
+    \ with user\n4. Ask: \"Accept enhanced version or keep original?\"\n\nIf **No** or prompt-engineer unavailable:\n- Proceed\
+    \ with original user input\n\n### Phase 3: File Generation\n\n**Progress:** Display before starting this phase:\n```bash\n\
+    echo \"[████████████░░░░░░] 60% - Step 3/5: File Generation\"\n```\n\nUpdate progress:\n```\n╔══════════════════════════════════════════════════════════════╗\n\
+    ║ ✓ Phase 1: Brainstorming                                     ║\n║ ✓ Phase 2: Prompt Refinement                     \
+    \            ║\n║ → Phase 3: File Generation               [50%]               ║\n╠══════════════════════════════════════════════════════════════╣\n\
+    ║ Progress: ███████████████░░░░░░░░░░░░░░░  50%              ║\n╚══════════════════════════════════════════════════════════════╝\n\
+    ```\n\n**Generate skill structure:**\n\n```bash\n# Convert skill name to kebab-case\nSKILL_NAME=$(echo \"$USER_INPUT\"\
+    \ | tr '[:upper:]' '[:lower:]' | tr ' ' '-')\n\n# Create directories\nif [[ \"$PLATFORM\" =~ \"copilot\" ]]; then\n  \
+    \  mkdir -p \".github/skills/$SKILL_NAME\"/{references,examples,scripts}\nfi\n\nif [[ \"$PLATFORM\" =~ \"claude\" ]];\
+    \ then\n    mkdir -p \".claude/skills/$SKILL_NAME\"/{references,examples,scripts}\nfi\n\nif [[ \"$PLATFORM\" =~ \"codex\"\
+    \ ]]; then\n    mkdir -p \".codex/skills/$SKILL_NAME\"/{references,examples,scripts}\nfi\n```\n\n**Apply templates:**\n\
+    \n1. **SKILL.md** - Use appropriate template:\n   - `skill-template-copilot.md`, `skill-template-claude.md`, or `skill-template-codex.md`\n\
+    \   - Substitute placeholders:\n     - `{{SKILL_NAME}}` → kebab-case name\n     - `{{DESCRIPTION}}` → one-line description\n\
+    \     - `{{TRIGGERS}}` → comma-separated trigger phrases\n     - `{{PURPOSE}}` → detailed purpose from brainstorming\n\
+    \     - `{{AUTHOR}}` → from git config\n     - `{{DATE}}` → current date (YYYY-MM-DD)\n     - `{{VERSION}}` → \"1.0.0\"\
+    \n\n2. **README.md** - Use `readme-template.md`:\n   - User-facing documentation (300-500 words)\n   - Include installation\
+    \ instructions\n   - Add usage examples\n\n3. **References/** (optional but recommended):\n   - Create `detailed-guide.md`\
+    \ for extended documentation (2k-5k words)\n   - Move lengthy content here to keep SKILL.md under 2k words\n\n**File creation\
+    \ commands:**\n\n```bash\n# Apply template with substitution\nsed \"s/{{SKILL_NAME}}/$SKILL_NAME/g; \\\n     s/{{DESCRIPTION}}/$DESCRIPTION/g;\
+    \ \\\n     s/{{AUTHOR}}/$AUTHOR/g; \\\n     s/{{DATE}}/$(date +%Y-%m-%d)/g\" \\\n    resources/templates/skill-template-copilot.md\
+    \ \\\n    > \".github/skills/$SKILL_NAME/SKILL.md\"\n\n# Create README\nsed \"s/{{SKILL_NAME}}/$SKILL_NAME/g\" \\\n  \
+    \  resources/templates/readme-template.md \\\n    > \".github/skills/$SKILL_NAME/README.md\"\n\n# Apply template for Codex\
+    \ if selected\nif [[ \"$PLATFORM\" =~ \"codex\" ]]; then\n    sed \"s/{{SKILL_NAME}}/$SKILL_NAME/g; \\\n         s/{{DESCRIPTION}}/$DESCRIPTION/g;\
+    \ \\\n         s/{{AUTHOR}}/$AUTHOR/g; \\\n         s/{{DATE}}/$(date +%Y-%m-%d)/g\" \\\n        resources/templates/skill-template-codex.md\
+    \ \\\n        > \".codex/skills/$SKILL_NAME/SKILL.md\"\n    \n    sed \"s/{{SKILL_NAME}}/$SKILL_NAME/g\" \\\n        resources/templates/readme-template.md\
+    \ \\\n        > \".codex/skills/$SKILL_NAME/README.md\"\nfi\n```\n\n**Display created structure:**\n```\n✅ Created:\n\
+    \   .github/skills/your-skill-name/ (if Copilot selected)\n   .claude/skills/your-skill-name/ (if Claude selected)\n \
+    \  .codex/skills/your-skill-name/ (if Codex selected)\n   ├── SKILL.md (832 lines)\n   ├── README.md (347 lines)\n   ├──\
+    \ references/\n   ├── examples/\n   └── scripts/\n```\n\n### Phase 4: Validation\n\n**Progress:** Display before starting\
+    \ this phase:\n```bash\necho \"[████████████████░░] 80% - Step 4/5: Validation\"\n```\n\nUpdate progress:\n```\n╔══════════════════════════════════════════════════════════════╗\n\
+    ║ ✓ Phase 3: File Generation                                   ║\n║ → Phase 4: Validation                    [70%]   \
+    \            ║\n╠══════════════════════════════════════════════════════════════╣\n║ Progress: █████████████████████░░░░░░░░░\
+    \  70%              ║\n╚══════════════════════════════════════════════════════════════╝\n```\n\n**Run validation scripts:**\n\
+    \n```bash\n# Validate YAML frontmatter\nscripts/validate-skill-yaml.sh \".github/skills/$SKILL_NAME\"\n\n# Validate content\
+    \ quality\nscripts/validate-skill-content.sh \".github/skills/$SKILL_NAME\"\n```\n\n**Expected output:**\n```\n\U0001F50D\
+    \ Validating YAML frontmatter...\n✅ YAML frontmatter valid!\n\n\U0001F50D Validating content...\n✅ Word count excellent:\
+    \ 1847 words\n✅ Content validation complete!\n```\n\n**If validation fails:**\n- Display specific errors\n- Offer to fix\
+    \ automatically (common issues)\n- Ask user to manually correct complex issues\n\n**Common auto-fixes:**\n- Convert second-person\
+    \ to imperative form\n- Reformat description to third-person\n- Add missing required fields\n\n### Phase 5: Installation\n\
+    \n**Progress:** Display before starting this phase:\n```bash\necho \"[████████████████████] 100% - Step 5/5: Installation\"\
+    \n```\n\nUpdate progress:\n```\n╔══════════════════════════════════════════════════════════════╗\n║ ✓ Phase 4: Validation\
+    \                                        ║\n║ → Phase 5: Installation                  [90%]               ║\n╠══════════════════════════════════════════════════════════════╣\n\
+    ║ Progress: ██████████████████████████░░░░░  90%              ║\n╚══════════════════════════════════════════════════════════════╝\n\
+    ```\n\n**Ask the user:**\n\"How would you like to install this skill?\"\n\n- [ ] **Repository only** - Files created in\
+    \ `.github/skills/` (works when in repo)\n- [ ] **Global installation** - Create symlinks in `~/.copilot/skills/` (works\
+    \ everywhere)\n- [ ] **Both** - Repository + global symlinks (recommended, auto-updates with git pull)\n- [ ] **Skip installation**\
+    \ - Just create files\n\n**If global installation selected:**\n\n```bash\n# Detect which platforms to install for\nINSTALL_TARGETS=()\n\
+    \nif [[ \"$COPILOT_INSTALLED\" == \"true\" ]] && [[ \"$PLATFORM\" =~ \"copilot\" ]]; then\n    INSTALL_TARGETS+=(\"copilot\"\
+    )\nfi\n\nif [[ \"$CLAUDE_INSTALLED\" == \"true\" ]] && [[ \"$PLATFORM\" =~ \"claude\" ]]; then\n    INSTALL_TARGETS+=(\"\
+    claude\")\nfi\n\nif [[ \"$CODEX_INSTALLED\" == \"true\" ]] && [[ \"$PLATFORM\" =~ \"codex\" ]]; then\n    INSTALL_TARGETS+=(\"\
+    codex\")\nfi\n\n# Ask user to confirm detected platforms\necho \"Detected platforms: ${INSTALL_TARGETS[*]}\"\necho \"\
+    Install for these platforms? [Y/n]\"\n```\n\n**Installation process:**\n\n```bash\n# GitHub Copilot CLI\nif [[ \" ${INSTALL_TARGETS[*]}\
+    \ \" =~ \" copilot \" ]]; then\n    ln -sf \"$SKILLS_REPO/.github/skills/$SKILL_NAME\" \\\n           \"$HOME/.copilot/skills/$SKILL_NAME\"\
+    \n    echo \"✅ Installed for GitHub Copilot CLI\"\nfi\n\n# Claude Code\nif [[ \" ${INSTALL_TARGETS[*]} \" =~ \" claude\
+    \ \" ]]; then\n    ln -sf \"$SKILLS_REPO/.claude/skills/$SKILL_NAME\" \\\n           \"$HOME/.claude/skills/$SKILL_NAME\"\
+    \n    echo \"✅ Installed for Claude Code\"\nfi\n\n# Codex\nif [[ \" ${INSTALL_TARGETS[*]} \" =~ \" codex \" ]]; then\n\
+    \    ln -sf \"$SKILLS_REPO/.codex/skills/$SKILL_NAME\" \\\n           \"$HOME/.codex/skills/$SKILL_NAME\"\n    echo \"\
+    ✅ Installed for Codex\"\nfi\n```\n\n**Verify installation:**\n\n```bash\n# Check symlinks\nls -la ~/.copilot/skills/$SKILL_NAME\
+    \ 2>/dev/null\nls -la ~/.claude/skills/$SKILL_NAME 2>/dev/null\nls -la ~/.codex/skills/$SKILL_NAME 2>/dev/null\n```\n\n\
+    ### Phase 6: Completion\n\n**Progress:** Display completion message:\n```bash\necho \"[████████████████████] 100% - ✓\
+    \ Skill created successfully!\"\n```\n\nUpdate progress:\n```\n╔══════════════════════════════════════════════════════════════╗\n\
+    ║ ✓ Phase 5: Installation                                      ║\n║ ✅ SKILL CREATION COMPLETE!                       \
+    \           ║\n╠══════════════════════════════════════════════════════════════╣\n║ Progress: ██████████████████████████████\
+    \  100%              ║\n╚══════════════════════════════════════════════════════════════╝\n```\n\n**Display summary:**\n\
+    \n```\n\U0001F389 Skill created successfully!\n\n\U0001F4E6 Skill Name: your-skill-name\n\U0001F4C1 Location: .github/skills/your-skill-name/\n\
+    \U0001F517 Installed: Global (Copilot + Claude)\n\n\U0001F4CB Files Created:\n   ✅ SKILL.md (1,847 words)\n   ✅ README.md\
+    \ (423 words)\n   ✅ references/ (empty, ready for extended docs)\n   ✅ examples/ (empty, ready for code samples)\n   ✅\
+    \ scripts/ (empty, ready for utilities)\n\n\U0001F680 Next Steps:\n   1. Test the skill: Try trigger phrases in CLI\n\
+    \   2. Add examples: Create working code samples in examples/\n   3. Extend docs: Add detailed guides to references/\n\
+    \   4. Commit changes: git add .github/skills/your-skill-name && git commit\n   5. Share: Push to repository for team\
+    \ use\n\n\U0001F4A1 Pro Tips:\n   - Keep SKILL.md under 2,000 words (currently: 1,847)\n   - Move detailed content to\
+    \ references/ folder\n   - Add executable scripts to scripts/ folder\n   - Update README.md with real usage examples\n\
+    \   - Run validation before committing: scripts/validate-skill-yaml.sh\n```\n\n## Error Handling\n\n### Platform Detection\
+    \ Issues\n\nIf platforms cannot be detected:\n```\n⚠️  Unable to detect GitHub Copilot CLI or Claude Code\n    \nWould\
+    \ you like to:\n1. Install for repository only (works when in repo)\n2. Specify platform manually\n3. Skip installation\n\
+    ```\n\n### Template Not Found\n\nIf templates are missing:\n```\n❌ Error: Template not found at resources/templates/\n\
+    \nThis skill requires the cli-ai-skills repository structure.\n\nOptions:\n1. Clone cli-ai-skills: git clone <repo-url>\n\
+    2. Create minimal skill structure manually\n3. Exit and set up templates first\n```\n\n### Validation Failures\n\nIf content\
+    \ doesn't meet standards:\n```\n⚠️  Validation Issues Found:\n\n1. YAML: Description not in third-person format\n   Expected:\
+    \ \"This skill should be used when...\"\n   Found: \"Use this skill when...\"\n   \n2. Content: Word count too high (5,342\
+    \ words, max 5,000)\n   Suggestion: Move detailed sections to references/\n\nFix automatically? [Y/n]\n```\n\n### Installation\
+    \ Conflicts\n\nIf symlink already exists:\n```\n⚠️  Skill already installed at ~/.copilot/skills/your-skill-name\n\nOptions:\n\
+    1. Overwrite existing installation\n2. Rename new skill\n3. Skip installation\n4. Install to different location\n```\n\
+    \n## Bundled Resources\n\nThis skill includes additional resources in subdirectories:\n\n### references/\n\nDetailed documentation\
+    \ loaded when needed:\n- `anthropic-best-practices.md` - Official Anthropic skill development guidelines\n- `writing-style-guide.md`\
+    \ - Writing standards and examples\n- `progressive-disclosure.md` - Content organization patterns\n- `validation-checklist.md`\
+    \ - Pre-commit quality checks\n\n### examples/\n\nWorking examples demonstrating skill usage:\n- `basic-skill-creation.md`\
+    \ - Simple skill creation walkthrough\n- `advanced-skill-bundled-resources.md` - Complex skill with references/\n- `global-installation.md`\
+    \ - Installing skills system-wide\n\n### scripts/\n\nExecutable utilities for skill maintenance:\n- `validate-all-skills.sh`\
+    \ - Batch validation of all skills in repository\n- `update-skill-version.sh` - Bump version and update changelog\n- `generate-skill-index.sh`\
+    \ - Auto-generate skills catalog\n\n## Technical Implementation Notes\n\n**Template Substitution:**\n- Use `sed` for simple\
+    \ replacements\n- Preserve YAML formatting exactly\n- Handle multi-line descriptions with proper escaping\n\n**Symlink\
+    \ Strategy:**\n- Always use absolute paths: `ln -sf /full/path/to/source ~/.copilot/skills/name`\n- Verify symlink before\
+    \ considering installation complete\n- Benefits: Auto-updates when repository is pulled\n\n**Validation Integration:**\n\
+    - Run validation before installation\n- Block installation if critical errors found\n- Warnings are informational only\n\
+    \n**Git Integration:**\n- Extract author from `git config user.name`\n- Use repository root detection: `git rev-parse\
+    \ --show-toplevel`\n- Respect `.gitignore` patterns\n\n## Quality Standards\n\n**SKILL.md Requirements:**\n- 1,500-2,000\
+    \ words (ideal)\n- Under 5,000 words (maximum)\n- Third-person description format\n- Imperative/infinitive writing style\n\
+    - Progressive disclosure pattern\n\n**README.md Requirements:**\n- 300-500 words\n- User-facing language\n- Clear installation\
+    \ instructions\n- Practical usage examples\n\n**Validation Checks:**\n- YAML frontmatter completeness\n- Description format\
+    \ (third-person)\n- Word count limits\n- Writing style (no second-person)\n- Required fields present\n\n## References\n\
+    \n- **Anthropic Official Skill Development Guide:** https://github.com/anthropics/claude-plugins-official/blob/main/plugins/plugin-dev/skills/skill-development/SKILL.md\n\
+    - **Repository:** https://github.com/yourusername/cli-ai-skills\n- **Writing Style Guide:** `resources/templates/writing-style-guide.md`\n\
+    - **Progress Tracker Template:** `resources/templates/progress-tracker.md`"
+edges:
+- to: using-superpowers
+  type: collaborates_with
+- to: brainstorming
+  type: collaborates_with
+- to: linux-shell-scripting
+  type: collaborates_with
+- to: skill-developer
+  type: collaborates_with
+- to: writing-skills
+  type: collaborates_with

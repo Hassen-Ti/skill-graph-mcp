@@ -17,7 +17,7 @@ RETURN node.id AS id, node.name AS name,
 async def search_skills(
     driver: AsyncDriver, query: str, top_n: int = 3,
 ) -> list[SkillCandidate]:
-    embedding = await embed_text(query)
+    embedding = await embed_text(query, label="search query")
     async with driver.session() as session:
         result = await session.run(
             _CYPHER_VECTOR_SEARCH, index=INDEX_NAME, k=top_n, embedding=embedding
