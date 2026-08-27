@@ -4,7 +4,7 @@ Skill Graph MCP Server — FastMCP entry point.
 
 Exposes 4 tools over stdio transport:
   - search_skills   : semantic search returning top-N SkillCandidate objects
-  - get_skill       : fetch a full SkillContextObject by ID (rate-limited)
+  - get_skill       : fetch a full SkillContextObject by ID (token-budget-limited)
   - navigate        : traverse graph edges from a given node
   - get_knowledge   : read a knowledge-base file by safe filename reference
 """
@@ -20,7 +20,7 @@ from core.neo4j_client import Neo4jClient
 from server.graph.traversal import build_skill_context_object
 from server.models.skill_node import NeighborMetadata, SkillCandidate, SkillContextObject
 from server.search.vector_search import search_skills as search_skills_impl
-from server.session import ACTIVE_TOOL_CAP, GET_SKILL_RATE_LIMIT, get_state
+from server.session import ACTIVE_TOOL_CAP, CONTEXT_BUDGET_TOKENS, get_state
 
 KNOWLEDGE_BASE_DIR: Path = Path(
     os.getenv(
@@ -111,7 +111,9 @@ async def get_skill(id: str, depth: str = "shallow") -> dict:
     """
     Retrieve the full SkillContextObject for a skill node.
 
-    Rate-limited to GET_SKILL_RATE_LIMIT calls per session.
+    Budget-limited to CONTEXT_BUDGET_TOKENS cumulative context_cost per session,
+    rather than a flat call count, so one large skill counts for what it
+    actually costs instead of the same as a tiny one.
 
     Args:
         id:    Skill node identifier.
@@ -121,21 +123,28 @@ async def get_skill(id: str, depth: str = "shallow") -> dict:
         SkillContextObject serialised as a dict.
 
     Raises:
-        ValueError: If the session rate limit has been reached.
+        ValueError: If the session's context budget is already exhausted, or
+            if this skill alone would exceed the remaining budget.
     """
     state = get_state()
-    if state.get_skill_calls >= GET_SKILL_RATE_LIMIT:
+    if state.total_context_cost >= CONTEXT_BUDGET_TOKENS:
         raise ValueError(
-            f"Rate limit reached: get_skill may be called at most "
-            f"{GET_SKILL_RATE_LIMIT} times per session "
-            f"(current count: {state.get_skill_calls})."
+            f"Context budget exhausted: {state.total_context_cost}/{CONTEXT_BUDGET_TOKENS} "
+            f"tokens already spent this session."
         )
     client = _get_neo4j_client()
     ctx_depth = "deep" if depth == "full" else "shallow"
     context: SkillContextObject = await build_skill_context_object(
         client=client, skill_id=id, depth=ctx_depth,
     )
-    state.get_skill_calls += 1
+    cost = context.metadata.context_cost
+    if state.total_context_cost + cost > CONTEXT_BUDGET_TOKENS:
+        remaining = CONTEXT_BUDGET_TOKENS - state.total_context_cost
+        raise ValueError(
+            f"get_skill({id!r}) costs {cost} tokens, exceeding the {remaining} "
+            f"remaining of the {CONTEXT_BUDGET_TOKENS}-token session budget."
+        )
+    state.total_context_cost += cost
     if context.payload is not None and len(state.active_tools) < ACTIVE_TOOL_CAP:
         for tool_name in context.payload.tools:
             if tool_name not in state.active_tools:
