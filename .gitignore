@@ -9,13 +9,7 @@
 # cache stays ignored.
 index_metadata.json
 staging/conversion_report.json
-
-# Viz — generated files (rebuild with enrich_semantic.py + build_html.py)
-viz/graph.json
-viz/index.html
-
-# Viz — local analytics workspace
-viz/analytics/
+eval/reports/
 
 # Python
 __pycache__/

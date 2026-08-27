@@ -32,6 +32,6 @@ def get_state() -> SessionState:
 
 
 def reset_state() -> None:
-    """Reset state to defaults. Intended for use in tests only."""
+    """Reset state to defaults. Not yet called anywhere — tests/ is currently empty."""
     global _state
     _state = SessionState()
