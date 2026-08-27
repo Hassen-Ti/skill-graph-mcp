@@ -9,6 +9,7 @@
 # cache stays ignored.
 index_metadata.json
 staging/conversion_report.json
+eval/reports/
 
 # Viz — generated files (rebuild with enrich_semantic.py + build_html.py)
 viz/graph.json
