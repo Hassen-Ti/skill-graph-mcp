@@ -1,0 +1,17 @@
+id: cc-skill-strategic-compact
+name: cc-skill-strategic-compact
+type: domain
+author: affaan-m
+version: 1.0.0
+description: Development skill from everything-claude-code
+priority: 2
+payload:
+  instructions: |-
+    # cc-skill-strategic-compact
+
+    Development skill skill.
+edges:
+- to: cc-skill-continuous-learning
+  type: collaborates_with
+- to: skill-developer
+  type: collaborates_with

@@ -1,0 +1,29 @@
+id: threejs-skills
+name: threejs-skills
+type: domain
+author: sklills_lib
+version: 1.0.0
+description: Three.js skills for creating 3D elements and interactive experiences
+priority: 2
+payload:
+  instructions: |-
+    # Threejs Skills
+
+    ## Overview
+
+    Three.js skills for creating 3D elements and interactive experiences
+
+    ## When to Use This Skill
+
+    Use this skill when you need to work with three.js skills for creating 3d elements and interactive experiences.
+
+    ## Instructions
+
+    This skill provides guidance and patterns for three.js skills for creating 3d elements and interactive experiences.
+
+    For more information, see the [source repository](https://github.com/CloudAI-X/threejs-skills).
+edges:
+- to: 3d-web-experience
+  type: collaborates_with
+- to: claude-d3js-skill
+  type: collaborates_with

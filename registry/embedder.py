@@ -63,7 +63,7 @@ async def update_embeddings(client: Any, registry: dict[str, dict]) -> None:
         current_hash = _hash_content(embed_text)
         if current_hash == stored_metadata.get(skill_id) and skill_id in embedded_in_graph:
             continue
-        embedding = await compute_embedding(embed_text)
+        embedding = await compute_embedding(embed_text, label=skill_id)
         await client.set_skill_embedding(skill_id, embedding)
         updated_metadata[skill_id] = current_hash
         updated_count += 1

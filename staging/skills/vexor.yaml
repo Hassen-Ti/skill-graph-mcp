@@ -1,0 +1,27 @@
+id: vexor
+name: vexor
+type: domain
+author: sklills_lib
+version: 1.0.0
+description: Vector-powered CLI for semantic file search with a Claude/Codex skill
+priority: 2
+payload:
+  instructions: |-
+    # Vexor
+
+    ## Overview
+
+    Vector-powered CLI for semantic file search with a Claude/Codex skill
+
+    ## When to Use This Skill
+
+    Use this skill when you need to work with vector-powered cli for semantic file search with a claude/codex skill.
+
+    ## Instructions
+
+    This skill provides guidance and patterns for vector-powered cli for semantic file search with a claude/codex skill.
+
+    For more information, see the [source repository](https://github.com/scarletkc/vexor).
+edges:
+- to: skill-developer
+  type: collaborates_with

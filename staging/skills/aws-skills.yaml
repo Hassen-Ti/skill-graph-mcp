@@ -1,0 +1,33 @@
+id: aws-skills
+name: aws-skills
+type: domain
+author: sklills_lib
+version: 1.0.0
+description: AWS development with infrastructure automation and cloud architecture patterns
+priority: 2
+payload:
+  instructions: |-
+    # Aws Skills
+
+    ## Overview
+
+    AWS development with infrastructure automation and cloud architecture patterns
+
+    ## When to Use This Skill
+
+    Use this skill when you need to work with aws development with infrastructure automation and cloud architecture patterns.
+
+    ## Instructions
+
+    This skill provides guidance and patterns for aws development with infrastructure automation and cloud architecture patterns.
+
+    For more information, see the [source repository](https://github.com/zxkane/aws-skills).
+edges:
+- to: cloud-architect
+  type: collaborates_with
+- to: terraform-module-library
+  type: collaborates_with
+- to: aws-serverless
+  type: collaborates_with
+- to: terraform-skill
+  type: collaborates_with

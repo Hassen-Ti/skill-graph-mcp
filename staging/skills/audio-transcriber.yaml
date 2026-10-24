@@ -1,0 +1,134 @@
+id: audio-transcriber
+name: audio-transcriber
+type: domain
+author: Eric Andrade
+version: 1.0.0
+description: Transform audio recordings into professional Markdown documentation with intelligent summaries using LLM integration
+priority: 2
+payload:
+  instructions: "## Purpose\n\nThis skill automates audio-to-text transcription with professional Markdown output, extracting\
+    \ rich technical metadata (speakers, timestamps, language, file size, duration) and generating structured meeting minutes\
+    \ and executive summaries. It uses Faster-Whisper or Whisper with zero configuration, working universally across projects\
+    \ without hardcoded paths or API keys.\n\nInspired by tools like Plaud, this skill transforms raw audio recordings into\
+    \ actionable documentation, making it ideal for meetings, interviews, lectures, and content analysis.\n\n## When to Use\n\
+    \nInvoke this skill when:\n\n- User needs to transcribe audio/video files to text\n- User wants meeting minutes automatically\
+    \ generated from recordings\n- User requires speaker identification (diarization) in conversations\n- User needs subtitles/captions\
+    \ (SRT, VTT formats)\n- User wants executive summaries of long audio content\n- User asks variations of \"transcribe this\
+    \ audio\", \"convert audio to text\", \"generate meeting notes from recording\"\n- User has audio files in common formats\
+    \ (MP3, WAV, M4A, OGG, FLAC, WEBM)\n\n## Workflow\n\n### Step 0: Discovery (Auto-detect Transcription Tools)\n\n**Objective:**\
+    \ Identify available transcription engines without user configuration.\n\n**Actions:**\n\nRun detection commands to find\
+    \ installed tools:\n\n```bash\n# Check for Faster-Whisper (preferred - 4-5x faster)\nif python3 -c \"import faster_whisper\"\
+    \ 2>/dev/null; then\n    TRANSCRIBER=\"faster-whisper\"\n    echo \"✅ Faster-Whisper detected (optimized)\"\n# Fallback\
+    \ to original Whisper\nelif python3 -c \"import whisper\" 2>/dev/null; then\n    TRANSCRIBER=\"whisper\"\n    echo \"\
+    ✅ OpenAI Whisper detected\"\nelse\n    TRANSCRIBER=\"none\"\n    echo \"⚠️  No transcription tool found\"\nfi\n\n# Check\
+    \ for ffmpeg (audio format conversion)\nif command -v ffmpeg &>/dev/null; then\n    echo \"✅ ffmpeg available (format\
+    \ conversion enabled)\"\nelse\n    echo \"ℹ️  ffmpeg not found (limited format support)\"\nfi\n```\n\n**If no transcriber\
+    \ found:**\n\nOffer automatic installation using the provided script:\n\n```bash\necho \"⚠️  No transcription tool found\"\
+    \necho \"\"\necho \"\U0001F527 Auto-install dependencies? (Recommended)\"\nread -p \"Run installation script? [Y/n]: \"\
+    \ AUTO_INSTALL\n\nif [[ ! \"$AUTO_INSTALL\" =~ ^[Nn] ]]; then\n    # Get skill directory (works for both repo and symlinked\
+    \ installations)\n    SKILL_DIR=\"$(cd \"$(dirname \"${BASH_SOURCE[0]}\")\" && pwd)\"\n    \n    # Run installation script\n\
+    \    if [[ -f \"$SKILL_DIR/scripts/install-requirements.sh\" ]]; then\n        bash \"$SKILL_DIR/scripts/install-requirements.sh\"\
+    \n    else\n        echo \"❌ Installation script not found\"\n        echo \"\"\n        echo \"\U0001F4E6 Manual installation:\"\
+    \n        echo \"  pip install faster-whisper  # Recommended\"\n        echo \"  pip install openai-whisper  # Alternative\"\
+    \n        echo \"  brew install ffmpeg         # Optional (macOS)\"\n        exit 1\n    fi\n    \n    # Verify installation\
+    \ succeeded\n    if python3 -c \"import faster_whisper\" 2>/dev/null || python3 -c \"import whisper\" 2>/dev/null; then\n\
+    \        echo \"✅ Installation successful! Proceeding with transcription...\"\n    else\n        echo \"❌ Installation\
+    \ failed. Please install manually.\"\n        exit 1\n    fi\nelse\n    echo \"\"\n    echo \"\U0001F4E6 Manual installation\
+    \ required:\"\n    echo \"\"\n    echo \"Recommended (fastest):\"\n    echo \"  pip install faster-whisper\"\n    echo\
+    \ \"\"\n    echo \"Alternative (original):\"\n    echo \"  pip install openai-whisper\"\n    echo \"\"\n    echo \"Optional\
+    \ (format conversion):\"\n    echo \"  brew install ffmpeg  # macOS\"\n    echo \"  apt install ffmpeg   # Linux\"\n \
+    \   echo \"\"\n    exit 1\nfi\n```\n\nThis ensures users can install dependencies with one confirmation, or opt for manual\
+    \ installation if preferred.\n\n**If transcriber found:**\n\nProceed to Step 0b (CLI Detection).\n\n\n### Step 1: Validate\
+    \ Audio File\n\n**Objective:** Verify file exists, check format, and extract metadata.\n\n**Actions:**\n\n1. **Accept\
+    \ file path or URL** from user:\n   - Local file: `meeting.mp3`\n   - URL: `https://example.com/audio.mp3` (download to\
+    \ temp directory)\n\n2. **Verify file exists:**\n\n```bash\nif [[ ! -f \"$AUDIO_FILE\" ]]; then\n    echo \"❌ File not\
+    \ found: $AUDIO_FILE\"\n    exit 1\nfi\n```\n\n3. **Extract metadata** using ffprobe or file utilities:\n\n```bash\n#\
+    \ Get file size\nFILE_SIZE=$(du -h \"$AUDIO_FILE\" | cut -f1)\n\n# Get duration and format using ffprobe\nDURATION=$(ffprobe\
+    \ -v error -show_entries format=duration \\\n    -of default=noprint_wrappers=1:nokey=1 \"$AUDIO_FILE\" 2>/dev/null)\n\
+    FORMAT=$(ffprobe -v error -select_streams a:0 -show_entries \\\n    stream=codec_name -of default=noprint_wrappers=1:nokey=1\
+    \ \"$AUDIO_FILE\" 2>/dev/null)\n\n# Convert duration to HH:MM:SS\nDURATION_HMS=$(date -u -r \"$DURATION\" +%H:%M:%S 2>/dev/null\
+    \ || echo \"Unknown\")\n```\n\n4. **Check file size** (warn if large for cloud APIs):\n\n```bash\nSIZE_MB=$(du -m \"$AUDIO_FILE\"\
+    \ | cut -f1)\nif [[ $SIZE_MB -gt 25 ]]; then\n    echo \"⚠️  Large file ($FILE_SIZE) - processing may take several minutes\"\
+    \nfi\n```\n\n5. **Validate format** (supported: MP3, WAV, M4A, OGG, FLAC, WEBM):\n\n```bash\nEXTENSION=\"${AUDIO_FILE##*.}\"\
+    \nSUPPORTED_FORMATS=(\"mp3\" \"wav\" \"m4a\" \"ogg\" \"flac\" \"webm\" \"mp4\")\n\nif [[ ! \" ${SUPPORTED_FORMATS[@]}\
+    \ \" =~ \" ${EXTENSION,,} \" ]]; then\n    echo \"⚠️  Unsupported format: $EXTENSION\"\n    if command -v ffmpeg &>/dev/null;\
+    \ then\n        echo \"\U0001F504 Converting to WAV...\"\n        ffmpeg -i \"$AUDIO_FILE\" -ar 16000 \"${AUDIO_FILE%.*}.wav\"\
+    \ -y\n        AUDIO_FILE=\"${AUDIO_FILE%.*}.wav\"\n    else\n        echo \"❌ Install ffmpeg to convert formats: brew\
+    \ install ffmpeg\"\n        exit 1\n    fi\nfi\n```\n\n\n### Step 3: Generate Markdown Output\n\n**Objective:** Create\
+    \ structured Markdown with metadata, transcription, meeting minutes, and summary.\n\n**Output Template:**\n\n```markdown\n\
+    # Audio Transcription Report\n\n## \U0001F4CA Metadata\n\n| Field | Value |\n|-------|-------|\n| **File Name** | {filename}\
+    \ |\n| **File Size** | {file_size} |\n| **Duration** | {duration_hms} |\n| **Language** | {language} ({language_code})\
+    \ |\n| **Processed Date** | {process_date} |\n| **Speakers Identified** | {num_speakers} |\n| **Transcription Engine**\
+    \ | {engine} (model: {model}) |\n\n\n## \U0001F4CB Meeting Minutes\n\n### Participants\n- {speaker_1}\n- {speaker_2}\n\
+    - ...\n\n### Topics Discussed\n1. **{topic_1}** ({timestamp})\n   - {key_point_1}\n   - {key_point_2}\n\n2. **{topic_2}**\
+    \ ({timestamp})\n   - {key_point_1}\n\n### Decisions Made\n- ✅ {decision_1}\n- ✅ {decision_2}\n\n### Action Items\n- [\
+    \ ] **{action_1}** - Assigned to: {speaker} - Due: {date_if_mentioned}\n- [ ] **{action_2}** - Assigned to: {speaker}\n\
+    \n\n*Generated by audio-transcriber skill v1.0.0*  \n*Transcription engine: {engine} | Processing time: {elapsed_time}s*\n\
+    ```\n\n**Implementation:**\n\nUse Python or bash with AI model (Claude/GPT) for intelligent summarization:\n\n```python\n\
+    def generate_meeting_minutes(segments):\n    \"\"\"Extract topics, decisions, action items from transcription.\"\"\"\n\
+    \    \n    # Group segments by topic (simple clustering by timestamps)\n    topics = cluster_by_topic(segments)\n    \n\
+    \    # Identify action items (keywords: \"should\", \"will\", \"need to\", \"action\")\n    action_items = extract_action_items(segments)\n\
+    \    \n    # Identify decisions (keywords: \"decided\", \"agreed\", \"approved\")\n    decisions = extract_decisions(segments)\n\
+    \    \n    return {\n        \"topics\": topics,\n        \"decisions\": decisions,\n        \"action_items\": action_items\n\
+    \    }\n\ndef generate_summary(segments, max_paragraphs=5):\n    \"\"\"Create executive summary using AI (Claude/GPT via\
+    \ API or local model).\"\"\"\n    \n    full_text = \" \".join([s[\"text\"] for s in segments])\n    \n    # Use Chain\
+    \ of Density approach (from prompt-engineer frameworks)\n    summary_prompt = f\"\"\"\n    Summarize the following transcription\
+    \ in {max_paragraphs} concise paragraphs.\n    Focus on key topics, decisions, and action items.\n    \n    Transcription:\n\
+    \    {full_text}\n    \"\"\"\n    \n    # Call AI model (placeholder - user can integrate Claude API or use local model)\n\
+    \    summary = call_ai_model(summary_prompt)\n    \n    return summary\n```\n\n**Output file naming:**\n\n```bash\n# v1.1.0:\
+    \ Use timestamp para evitar sobrescrever\nTIMESTAMP=$(date +%Y%m%d-%H%M%S)\nTRANSCRIPT_FILE=\"transcript-${TIMESTAMP}.md\"\
+    \nATA_FILE=\"ata-${TIMESTAMP}.md\"\n\necho \"$TRANSCRIPT_CONTENT\" > \"$TRANSCRIPT_FILE\"\necho \"✅ Transcript salvo:\
+    \ $TRANSCRIPT_FILE\"\n\nif [[ -n \"$ATA_CONTENT\" ]]; then\n    echo \"$ATA_CONTENT\" > \"$ATA_FILE\"\n    echo \"✅ Ata\
+    \ salva: $ATA_FILE\"\nfi\n```\n\n\n#### **SCENARIO A: User Provided Custom Prompt**\n\n**Workflow:**\n\n1. **Display user's\
+    \ prompt:**\n   ```\n   \U0001F4DD Prompt fornecido pelo usuário:\n   ┌──────────────────────────────────┐\n   │ [User's\
+    \ prompt preview]          │\n   └──────────────────────────────────┘\n   ```\n\n2. **Automatically improve with prompt-engineer\
+    \ (if available):**\n   ```bash\n   \U0001F527 Melhorando prompt com prompt-engineer...\n   [Invokes: gh copilot -p \"\
+    melhore este prompt: {user_prompt}\"]\n   ```\n\n3. **Show both versions:**\n   ```\n   ✨ Versão melhorada:\n   ┌──────────────────────────────────┐\n\
+    \   │ Role: Você é um documentador...  │\n   │ Instructions: Transforme...      │\n   │ Steps: 1) ... 2) ...         \
+    \    │\n   │ End Goal: ...                    │\n   └──────────────────────────────────┘\n\n   \U0001F4DD Versão original:\n\
+    \   ┌──────────────────────────────────┐\n   │ [User's original prompt]         │\n   └──────────────────────────────────┘\n\
+    \   ```\n\n4. **Ask which to use:**\n   ```bash\n   \U0001F4A1 Usar versão melhorada? [s/n] (default: s):\n   ```\n\n\
+    5. **Process with selected prompt:**\n   - If \"s\": use improved\n   - If \"n\": use original\n\n\n#### **LLM Processing\
+    \ (Both Scenarios)**\n\nOnce prompt is finalized:\n\n```python\nfrom rich.progress import Progress, SpinnerColumn, TextColumn\n\
+    \ndef process_with_llm(transcript, prompt, cli_tool='claude'):\n    full_prompt = f\"{prompt}\\n\\n---\\n\\nTranscrição:\\\
+    n\\n{transcript}\"\n    \n    with Progress(\n        SpinnerColumn(),\n        TextColumn(\"[progress.description]{task.description}\"\
+    ),\n        transient=True\n    ) as progress:\n        progress.add_task(\n            description=f\"\U0001F916 Processando\
+    \ com {cli_tool}...\",\n            total=None\n        )\n        \n        if cli_tool == 'claude':\n            result\
+    \ = subprocess.run(\n                ['claude', '-'],\n                input=full_prompt,\n                capture_output=True,\n\
+    \                text=True,\n                timeout=300  # 5 minutes\n            )\n        elif cli_tool == 'gh-copilot':\n\
+    \            result = subprocess.run(\n                ['gh', 'copilot', 'suggest', '-t', 'shell', full_prompt],\n   \
+    \             capture_output=True,\n                text=True,\n                timeout=300\n            )\n    \n   \
+    \ if result.returncode == 0:\n        return result.stdout.strip()\n    else:\n        return None\n```\n\n**Progress\
+    \ output:**\n```\n\U0001F916 Processando com claude... ⠋\n[After completion:]\n✅ Ata gerada com sucesso!\n```\n\n\n####\
+    \ **Final Output**\n\n**Success (both files):**\n```bash\n\U0001F4BE Salvando arquivos...\n\n✅ Arquivos criados:\n  -\
+    \ transcript-20260203-023045.md  (transcript puro)\n  - ata-20260203-023045.md         (processado com LLM)\n\n\U0001F9F9\
+    \ Removidos arquivos temporários: metadata.json, transcription.json\n\n✅ Concluído! Tempo total: 3m 45s\n```\n\n**Transcript\
+    \ only (user declined LLM):**\n```bash\n\U0001F4BE Salvando arquivos...\n\n✅ Arquivo criado:\n  - transcript-20260203-023045.md\n\
+    \nℹ️  Ata não gerada (processamento LLM recusado pelo usuário)\n\n\U0001F9F9 Removidos arquivos temporários: metadata.json,\
+    \ transcription.json\n\n✅ Concluído!\n```\n\n\n### Step 5: Display Results Summary\n\n**Objective:** Show completion status\
+    \ and next steps.\n\n**Output:**\n\n```bash\necho \"\"\necho \"✅ Transcription Complete!\"\necho \"\"\necho \"\U0001F4CA\
+    \ Results:\"\necho \"  File: $OUTPUT_FILE\"\necho \"  Language: $LANGUAGE\"\necho \"  Duration: $DURATION_HMS\"\necho\
+    \ \"  Speakers: $NUM_SPEAKERS\"\necho \"  Words: $WORD_COUNT\"\necho \"  Processing time: ${ELAPSED_TIME}s\"\necho \"\"\
+    \necho \"\U0001F4DD Generated:\"\necho \"  - $OUTPUT_FILE (Markdown report)\"\n[if alternative formats:]\necho \"  - ${OUTPUT_FILE%.*}.srt\
+    \ (Subtitles)\"\necho \"  - ${OUTPUT_FILE%.*}.json (Structured data)\"\necho \"\"\necho \"\U0001F3AF Next steps:\"\necho\
+    \ \"  1. Review meeting minutes and action items\"\necho \"  2. Share report with participants\"\necho \"  3. Track action\
+    \ items to completion\"\n```\n\n\n## Example Usage\n\n### **Example 1: Basic Transcription**\n\n**User Input:**\n```bash\n\
+    copilot> transcribe audio to markdown: meeting-2026-02-02.mp3\n```\n\n**Skill Output:**\n\n```bash\n✅ Faster-Whisper detected\
+    \ (optimized)\n✅ ffmpeg available (format conversion enabled)\n\n\U0001F4C2 File: meeting-2026-02-02.mp3\n\U0001F4CA Size:\
+    \ 12.3 MB\n⏱️  Duration: 00:45:32\n\n\U0001F399️  Processing...\n[████████████████████] 100%\n\n✅ Language detected: Portuguese\
+    \ (pt-BR)\n\U0001F465 Speakers identified: 4\n\U0001F4DD Generating Markdown output...\n\n✅ Transcription Complete!\n\n\
+    \U0001F4CA Results:\n  File: meeting-2026-02-02.md\n  Language: pt-BR\n  Duration: 00:45:32\n  Speakers: 4\n  Words: 6,842\n\
+    \  Processing time: 127s\n\n\U0001F4DD Generated:\n  - meeting-2026-02-02.md (Markdown report)\n\n\U0001F3AF Next steps:\n\
+    \  1. Review meeting minutes and action items\n  2. Share report with participants\n  3. Track action items to completion\n\
+    ```\n\n\n### **Example 3: Batch Processing**\n\n**User Input:**\n```bash\ncopilot> transcreva estes áudios: recordings/*.mp3\n\
+    ```\n\n**Skill Output:**\n\n```bash\n\U0001F4E6 Batch mode: 5 files found\n  1. team-standup.mp3\n  2. client-call.mp3\n\
+    \  3. brainstorm-session.mp3\n  4. product-demo.mp3\n  5. retrospective.mp3\n\n\U0001F399️  Processing batch...\n\n[1/5]\
+    \ team-standup.mp3 ✅ (2m 34s)\n[2/5] client-call.mp3 ✅ (15m 12s)\n[3/5] brainstorm-session.mp3 ✅ (8m 47s)\n[4/5] product-demo.mp3\
+    \ ✅ (22m 03s)\n[5/5] retrospective.mp3 ✅ (11m 28s)\n\n✅ Batch Complete!\n\U0001F4DD Generated 5 Markdown reports\n⏱️ \
+    \ Total processing time: 6m 15s\n```\n\n\n### **Example 5: Large File Warning**\n\n**User Input:**\n```bash\ncopilot>\
+    \ transcribe audio to markdown: conference-keynote.mp3\n```\n\n**Skill Output:**\n\n```bash\n✅ Faster-Whisper detected\
+    \ (optimized)\n\n\U0001F4C2 File: conference-keynote.mp3\n\U0001F4CA Size: 87.2 MB\n⏱️  Duration: 02:15:47\n⚠️  Large\
+    \ file (87.2 MB) - processing may take several minutes\n\nContinue? [Y/n]:\n```\n\n**User:** `Y`\n\n```bash\n\U0001F399\
+    ️  Processing... (this may take 10-15 minutes)\n[████░░░░░░░░░░░░░░░░] 20% - Estimated time remaining: 12m\n```\n\n\n\
+    This skill is **platform-agnostic** and works in any terminal context where GitHub Copilot CLI is available. It does not\
+    \ depend on specific project configurations or external APIs, following the zero-configuration philosophy."

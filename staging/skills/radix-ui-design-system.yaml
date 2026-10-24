@@ -1,0 +1,203 @@
+id: radix-ui-design-system
+name: radix-ui-design-system
+type: domain
+author: sklills_lib
+version: 1.0.0
+description: Build accessible design systems with Radix UI primitives. Headless component customization, theming strategies,
+  and compound component patterns for production-grade UI libraries.
+priority: 2
+payload:
+  instructions: "# Radix UI Design System\n\nBuild production-ready, accessible design systems using Radix UI primitives with\
+    \ full customization control and zero style opinions.\n\n## Overview\n\nRadix UI provides unstyled, accessible components\
+    \ (primitives) that you can customize to match any design system. This skill guides you through building scalable component\
+    \ libraries with Radix UI, focusing on accessibility-first design, theming architecture, and composable patterns.\n\n\
+    **Key Strengths:**\n- **Headless by design**: Full styling control without fighting defaults\n- **Accessibility built-in**:\
+    \ WAI-ARIA compliant, keyboard navigation, screen reader support\n- **Composable primitives**: Build complex components\
+    \ from simple building blocks\n- **Framework agnostic**: Works with React, but styles work anywhere\n\n## When to Use\
+    \ This Skill\n\n- Creating a custom design system from scratch\n- Building accessible UI component libraries\n- Implementing\
+    \ complex interactive components (Dialog, Dropdown, Tabs, etc.)\n- Migrating from styled component libraries to unstyled\
+    \ primitives\n- Setting up theming systems with CSS variables or Tailwind\n- Need full control over component behavior\
+    \ and styling\n- Building applications requiring WCAG 2.1 AA/AAA compliance\n\n## Do not use this skill when\n\n- You\
+    \ need pre-styled components out of the box (use shadcn/ui, Mantine, etc.)\n- Building simple static pages without interactivity\n\
+    - The project doesn't use React 16.8+ (Radix requires hooks)\n- You need components for frameworks other than React\n\n\
+    ---\n\n## Core Principles\n\n### 1. Accessibility First\n\nEvery Radix primitive is built with accessibility as the foundation:\n\
+    \n- **Keyboard Navigation**: Full keyboard support (Tab, Arrow keys, Enter, Escape)\n- **Screen Readers**: Proper ARIA\
+    \ attributes and live regions\n- **Focus Management**: Automatic focus trapping and restoration\n- **Disabled States**:\
+    \ Proper handling of disabled and aria-disabled\n\n**Rule**: Never override accessibility features. Enhance, don't replace.\n\
+    \n### 2. Headless Architecture\n\nRadix provides **behavior**, you provide **appearance**:\n\n```tsx\n// ❌ Don't fight\
+    \ pre-styled components\n<Button className=\"override-everything\" />\n\n// ✅ Radix gives you behavior, you add styling\n\
+    <Dialog.Root>\n  <Dialog.Trigger className=\"your-button-styles\" />\n  <Dialog.Content className=\"your-modal-styles\"\
+    \ />\n</Dialog.Root>\n```\n\n### 3. Composition Over Configuration\n\nBuild complex components from simple primitives:\n\
+    \n```tsx\n// Primitive components compose naturally\n<Tabs.Root>\n  <Tabs.List>\n    <Tabs.Trigger value=\"tab1\">Tab\
+    \ 1</Tabs.Trigger>\n    <Tabs.Trigger value=\"tab2\">Tab 2</Tabs.Trigger>\n  </Tabs.List>\n  <Tabs.Content value=\"tab1\"\
+    >Content 1</Tabs.Content>\n  <Tabs.Content value=\"tab2\">Content 2</Tabs.Content>\n</Tabs.Root>\n```\n\n---\n\n## Getting\
+    \ Started\n\n### Installation\n\n```bash\n# Install individual primitives (recommended)\nnpm install @radix-ui/react-dialog\
+    \ @radix-ui/react-dropdown-menu\n\n# Or install multiple at once\nnpm install @radix-ui/react-{dialog,dropdown-menu,tabs,tooltip}\n\
+    \n# For styling (optional but common)\nnpm install clsx tailwind-merge class-variance-authority\n```\n\n### Basic Component\
+    \ Pattern\n\nEvery Radix component follows this pattern:\n\n```tsx\nimport * as Dialog from '@radix-ui/react-dialog';\n\
+    \nexport function MyDialog() {\n  return (\n    <Dialog.Root>\n      {/* Trigger the dialog */}\n      <Dialog.Trigger\
+    \ asChild>\n        <button className=\"trigger-styles\">Open</button>\n      </Dialog.Trigger>\n\n      {/* Portal renders\
+    \ outside DOM hierarchy */}\n      <Dialog.Portal>\n        {/* Overlay (backdrop) */}\n        <Dialog.Overlay className=\"\
+    overlay-styles\" />\n        \n        {/* Content (modal) */}\n        <Dialog.Content className=\"content-styles\">\n\
+    \          <Dialog.Title>Title</Dialog.Title>\n          <Dialog.Description>Description</Dialog.Description>\n      \
+    \    \n          {/* Your content here */}\n          \n          <Dialog.Close asChild>\n            <button>Close</button>\n\
+    \          </Dialog.Close>\n        </Dialog.Content>\n      </Dialog.Portal>\n    </Dialog.Root>\n  );\n}\n```\n\n---\n\
+    \n## Theming Strategies\n\n### Strategy 1: CSS Variables (Framework-Agnostic)\n\n**Best for**: Maximum portability, SSR-friendly\n\
+    \n```css\n/* globals.css */\n:root {\n  --color-primary: 220 90% 56%;\n  --color-surface: 0 0% 100%;\n  --radius-base:\
+    \ 0.5rem;\n  --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1);\n}\n\n[data-theme=\"dark\"] {\n  --color-primary: 220 90%\
+    \ 66%;\n  --color-surface: 222 47% 11%;\n}\n```\n\n```tsx\n// Component.tsx\n<Dialog.Content \n  className=\"\n    bg-[hsl(var(--color-surface))]\n\
+    \    rounded-[var(--radius-base)]\n    shadow-[var(--shadow-lg)]\n  \"\n/>\n```\n\n### Strategy 2: Tailwind + CVA (Class\
+    \ Variance Authority)\n\n**Best for**: Tailwind projects, variant-heavy components\n\n```tsx\n// button.tsx\nimport {\
+    \ cva, type VariantProps } from 'class-variance-authority';\nimport { cn } from '@/lib/utils';\n\nconst buttonVariants\
+    \ = cva(\n  // Base styles\n  \"inline-flex items-center justify-center rounded-md font-medium transition-colors focus-visible:outline-none\
+    \ disabled:pointer-events-none disabled:opacity-50\",\n  {\n    variants: {\n      variant: {\n        default: \"bg-primary\
+    \ text-primary-foreground hover:bg-primary/90\",\n        destructive: \"bg-destructive text-destructive-foreground hover:bg-destructive/90\"\
+    ,\n        outline: \"border border-input bg-background hover:bg-accent\",\n        ghost: \"hover:bg-accent hover:text-accent-foreground\"\
+    ,\n      },\n      size: {\n        default: \"h-10 px-4 py-2\",\n        sm: \"h-9 rounded-md px-3\",\n        lg: \"\
+    h-11 rounded-md px-8\",\n        icon: \"h-10 w-10\",\n      },\n    },\n    defaultVariants: {\n      variant: \"default\"\
+    ,\n      size: \"default\",\n    },\n  }\n);\n\ninterface ButtonProps extends VariantProps<typeof buttonVariants> {\n\
+    \  children: React.ReactNode;\n}\n\nexport function Button({ variant, size, children }: ButtonProps) {\n  return (\n \
+    \   <button className={cn(buttonVariants({ variant, size }))}>\n      {children}\n    </button>\n  );\n}\n```\n\n### Strategy\
+    \ 3: Stitches (CSS-in-JS)\n\n**Best for**: Runtime theming, scoped styles\n\n```tsx\nimport { styled } from '@stitches/react';\n\
+    import * as Dialog from '@radix-ui/react-dialog';\n\nconst StyledContent = styled(Dialog.Content, {\n  backgroundColor:\
+    \ '$surface',\n  borderRadius: '$md',\n  padding: '$6',\n  \n  variants: {\n    size: {\n      small: { width: '300px'\
+    \ },\n      medium: { width: '500px' },\n      large: { width: '700px' },\n    },\n  },\n  \n  defaultVariants: {\n  \
+    \  size: 'medium',\n  },\n});\n```\n\n---\n\n## Component Patterns\n\n### Pattern 1: Compound Components with Context\n\
+    \n**Use case**: Share state between primitive parts\n\n```tsx\n// Select.tsx\nimport * as Select from '@radix-ui/react-select';\n\
+    import { CheckIcon, ChevronDownIcon } from '@radix-ui/react-icons';\n\nexport function CustomSelect({ items, placeholder,\
+    \ onValueChange }) {\n  return (\n    <Select.Root onValueChange={onValueChange}>\n      <Select.Trigger className=\"\
+    select-trigger\">\n        <Select.Value placeholder={placeholder} />\n        <Select.Icon>\n          <ChevronDownIcon\
+    \ />\n        </Select.Icon>\n      </Select.Trigger>\n\n      <Select.Portal>\n        <Select.Content className=\"select-content\"\
+    >\n          <Select.Viewport>\n            {items.map((item) => (\n              <Select.Item \n                key={item.value}\
+    \ \n                value={item.value}\n                className=\"select-item\"\n              >\n                <Select.ItemText>{item.label}</Select.ItemText>\n\
+    \                <Select.ItemIndicator>\n                  <CheckIcon />\n                </Select.ItemIndicator>\n  \
+    \            </Select.Item>\n            ))}\n          </Select.Viewport>\n        </Select.Content>\n      </Select.Portal>\n\
+    \    </Select.Root>\n  );\n}\n```\n\n### Pattern 2: Polymorphic Components with `asChild`\n\n**Use case**: Render as different\
+    \ elements without losing behavior\n\n```tsx\n// ✅ Render as Next.js Link but keep Radix behavior\n<Dialog.Trigger asChild>\n\
+    \  <Link href=\"/settings\">Open Settings</Link>\n</Dialog.Trigger>\n\n// ✅ Render as custom component\n<DropdownMenu.Item\
+    \ asChild>\n  <YourCustomButton icon={<Icon />}>Action</YourCustomButton>\n</DropdownMenu.Item>\n```\n\n**Why `asChild`\
+    \ matters**: Prevents nested button/link issues in accessibility tree.\n\n### Pattern 3: Controlled vs Uncontrolled\n\n\
+    ```tsx\n// Uncontrolled (Radix manages state)\n<Tabs.Root defaultValue=\"tab1\">\n  <Tabs.Trigger value=\"tab1\">Tab 1</Tabs.Trigger>\n\
+    </Tabs.Root>\n\n// Controlled (You manage state)\nconst [activeTab, setActiveTab] = useState('tab1');\n\n<Tabs.Root value={activeTab}\
+    \ onValueChange={setActiveTab}>\n  <Tabs.Trigger value=\"tab1\">Tab 1</Tabs.Trigger>\n</Tabs.Root>\n```\n\n**Rule**: Use\
+    \ controlled when you need to sync with external state (URL, Redux, etc.).\n\n### Pattern 4: Animation with Framer Motion\n\
+    \n```tsx\nimport * as Dialog from '@radix-ui/react-dialog';\nimport { motion, AnimatePresence } from 'framer-motion';\n\
+    \nexport function AnimatedDialog({ open, onOpenChange }) {\n  return (\n    <Dialog.Root open={open} onOpenChange={onOpenChange}>\n\
+    \      <Dialog.Portal forceMount>\n        <AnimatePresence>\n          {open && (\n            <>\n              <Dialog.Overlay\
+    \ asChild>\n                <motion.div\n                  initial={{ opacity: 0 }}\n                  animate={{ opacity:\
+    \ 1 }}\n                  exit={{ opacity: 0 }}\n                  className=\"dialog-overlay\"\n                />\n\
+    \              </Dialog.Overlay>\n              \n              <Dialog.Content asChild>\n                <motion.div\n\
+    \                  initial={{ opacity: 0, scale: 0.95 }}\n                  animate={{ opacity: 1, scale: 1 }}\n     \
+    \             exit={{ opacity: 0, scale: 0.95 }}\n                  className=\"dialog-content\"\n                >\n\
+    \                  {/* Content */}\n                </motion.div>\n              </Dialog.Content>\n            </>\n\
+    \          )}\n        </AnimatePresence>\n      </Dialog.Portal>\n    </Dialog.Root>\n  );\n}\n```\n\n---\n\n## Common\
+    \ Primitives Reference\n\n### Dialog (Modal)\n\n```tsx\n<Dialog.Root> {/* State container */}\n  <Dialog.Trigger /> {/*\
+    \ Opens dialog */}\n  <Dialog.Portal> {/* Renders in portal */}\n    <Dialog.Overlay /> {/* Backdrop */}\n    <Dialog.Content>\
+    \ {/* Modal content */}\n      <Dialog.Title /> {/* Required for a11y */}\n      <Dialog.Description /> {/* Required for\
+    \ a11y */}\n      <Dialog.Close /> {/* Closes dialog */}\n    </Dialog.Content>\n  </Dialog.Portal>\n</Dialog.Root>\n\
+    ```\n\n### Dropdown Menu\n\n```tsx\n<DropdownMenu.Root>\n  <DropdownMenu.Trigger />\n  <DropdownMenu.Portal>\n    <DropdownMenu.Content>\n\
+    \      <DropdownMenu.Item />\n      <DropdownMenu.Separator />\n      <DropdownMenu.CheckboxItem />\n      <DropdownMenu.RadioGroup>\n\
+    \        <DropdownMenu.RadioItem />\n      </DropdownMenu.RadioGroup>\n      <DropdownMenu.Sub> {/* Nested menus */}\n\
+    \        <DropdownMenu.SubTrigger />\n        <DropdownMenu.SubContent />\n      </DropdownMenu.Sub>\n    </DropdownMenu.Content>\n\
+    \  </DropdownMenu.Portal>\n</DropdownMenu.Root>\n```\n\n### Tabs\n\n```tsx\n<Tabs.Root defaultValue=\"tab1\">\n  <Tabs.List>\n\
+    \    <Tabs.Trigger value=\"tab1\" />\n    <Tabs.Trigger value=\"tab2\" />\n  </Tabs.List>\n  <Tabs.Content value=\"tab1\"\
+    \ />\n  <Tabs.Content value=\"tab2\" />\n</Tabs.Root>\n```\n\n### Tooltip\n\n```tsx\n<Tooltip.Provider delayDuration={200}>\n\
+    \  <Tooltip.Root>\n    <Tooltip.Trigger />\n    <Tooltip.Portal>\n      <Tooltip.Content side=\"top\" align=\"center\"\
+    >\n        Tooltip text\n        <Tooltip.Arrow />\n      </Tooltip.Content>\n    </Tooltip.Portal>\n  </Tooltip.Root>\n\
+    </Tooltip.Provider>\n```\n\n### Popover\n\n```tsx\n<Popover.Root>\n  <Popover.Trigger />\n  <Popover.Portal>\n    <Popover.Content\
+    \ side=\"bottom\" align=\"start\">\n      Content\n      <Popover.Arrow />\n      <Popover.Close />\n    </Popover.Content>\n\
+    \  </Popover.Portal>\n</Popover.Root>\n```\n\n---\n\n## Accessibility Checklist\n\n### Every Component Must Have:\n\n\
+    - [ ] **Focus Management**: Visible focus indicators on all interactive elements\n- [ ] **Keyboard Navigation**: Full\
+    \ keyboard support (Tab, Arrows, Enter, Esc)\n- [ ] **ARIA Labels**: Meaningful labels for screen readers\n- [ ] **Color\
+    \ Contrast**: WCAG AA minimum (4.5:1 for text, 3:1 for UI)\n- [ ] **Error States**: Clear error messages with `aria-invalid`\
+    \ and `aria-describedby`\n- [ ] **Loading States**: Proper `aria-busy` during async operations\n\n### Dialog-Specific:\n\
+    - [ ] `Dialog.Title` is present (required for screen readers)\n- [ ] `Dialog.Description` provides context\n- [ ] Focus\
+    \ trapped inside modal when open\n- [ ] Escape key closes dialog\n- [ ] Focus returns to trigger on close\n\n### Dropdown-Specific:\n\
+    - [ ] Arrow keys navigate items\n- [ ] Type-ahead search works\n- [ ] First/last item wrapping behavior\n- [ ] Selected\
+    \ state indicated visually and with ARIA\n\n---\n\n## Best Practices\n\n### ✅ Do This\n\n1. **Always use `asChild` to\
+    \ avoid wrapper divs**\n   ```tsx\n   <Dialog.Trigger asChild>\n     <button>Open</button>\n   </Dialog.Trigger>\n   ```\n\
+    \n2. **Provide semantic HTML**\n   ```tsx\n   <Dialog.Content asChild>\n     <article role=\"dialog\" aria-labelledby=\"\
+    title\">\n       {/* content */}\n     </article>\n   </Dialog.Content>\n   ```\n\n3. **Use CSS variables for theming**\n\
+    \   ```css\n   .dialog-content {\n     background: hsl(var(--surface));\n     color: hsl(var(--on-surface));\n   }\n \
+    \  ```\n\n4. **Compose primitives for complex components**\n   ```tsx\n   function CommandPalette() {\n     return (\n\
+    \       <Dialog.Root>\n         <Dialog.Content>\n           <Combobox /> {/* Radix Combobox inside Dialog */}\n     \
+    \    </Dialog.Content>\n       </Dialog.Root>\n     );\n   }\n   ```\n\n### ❌ Don't Do This\n\n1. **Don't skip accessibility\
+    \ parts**\n   ```tsx\n   // ❌ Missing Title and Description\n   <Dialog.Content>\n     <div>Content</div>\n   </Dialog.Content>\n\
+    \   ```\n\n2. **Don't fight the primitives**\n   ```tsx\n   // ❌ Overriding internal behavior\n   <Dialog.Content onClick={(e)\
+    \ => e.stopPropagation()}>\n   ```\n\n3. **Don't mix controlled and uncontrolled**\n   ```tsx\n   // ❌ Inconsistent state\
+    \ management\n   <Tabs.Root defaultValue=\"tab1\" value={activeTab}>\n   ```\n\n4. **Don't ignore keyboard navigation**\n\
+    \   ```tsx\n   // ❌ Disabling keyboard behavior\n   <DropdownMenu.Item onKeyDown={(e) => e.preventDefault()}>\n   ```\n\
+    \n---\n\n## Real-World Examples\n\n### Example 1: Command Palette (Combo Dialog)\n\n```tsx\nimport * as Dialog from '@radix-ui/react-dialog';\n\
+    import { Command } from 'cmdk';\n\nexport function CommandPalette() {\n  const [open, setOpen] = useState(false);\n\n\
+    \  useEffect(() => {\n    const down = (e: KeyboardEvent) => {\n      if (e.key === 'k' && (e.metaKey || e.ctrlKey)) {\n\
+    \        e.preventDefault();\n        setOpen((open) => !open);\n      }\n    };\n    document.addEventListener('keydown',\
+    \ down);\n    return () => document.removeEventListener('keydown', down);\n  }, []);\n\n  return (\n    <Dialog.Root open={open}\
+    \ onOpenChange={setOpen}>\n      <Dialog.Portal>\n        <Dialog.Overlay className=\"fixed inset-0 bg-black/50\" />\n\
+    \        <Dialog.Content className=\"fixed left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2\">\n          <Command>\n\
+    \            <Command.Input placeholder=\"Type a command...\" />\n            <Command.List>\n              <Command.Empty>No\
+    \ results found.</Command.Empty>\n              <Command.Group heading=\"Suggestions\">\n                <Command.Item>Calendar</Command.Item>\n\
+    \                <Command.Item>Search Emoji</Command.Item>\n              </Command.Group>\n            </Command.List>\n\
+    \          </Command>\n        </Dialog.Content>\n      </Dialog.Portal>\n    </Dialog.Root>\n  );\n}\n```\n\n### Example\
+    \ 2: Dropdown Menu with Icons\n\n```tsx\nimport * as DropdownMenu from '@radix-ui/react-dropdown-menu';\nimport { DotsHorizontalIcon\
+    \ } from '@radix-ui/react-icons';\n\nexport function ActionsMenu() {\n  return (\n    <DropdownMenu.Root>\n      <DropdownMenu.Trigger\
+    \ asChild>\n        <button className=\"icon-button\" aria-label=\"Actions\">\n          <DotsHorizontalIcon />\n    \
+    \    </button>\n      </DropdownMenu.Trigger>\n\n      <DropdownMenu.Portal>\n        <DropdownMenu.Content className=\"\
+    dropdown-content\" align=\"end\">\n          <DropdownMenu.Item className=\"dropdown-item\">\n            Edit\n     \
+    \     </DropdownMenu.Item>\n          <DropdownMenu.Item className=\"dropdown-item\">\n            Duplicate\n       \
+    \   </DropdownMenu.Item>\n          <DropdownMenu.Separator className=\"dropdown-separator\" />\n          <DropdownMenu.Item\
+    \ className=\"dropdown-item text-red-500\">\n            Delete\n          </DropdownMenu.Item>\n        </DropdownMenu.Content>\n\
+    \      </DropdownMenu.Portal>\n    </DropdownMenu.Root>\n  );\n}\n```\n\n### Example 3: Form with Radix Select + React\
+    \ Hook Form\n\n```tsx\nimport * as Select from '@radix-ui/react-select';\nimport { useForm, Controller } from 'react-hook-form';\n\
+    \ninterface FormData {\n  country: string;\n}\n\nexport function CountryForm() {\n  const { control, handleSubmit } =\
+    \ useForm<FormData>();\n\n  return (\n    <form onSubmit={handleSubmit((data) => console.log(data))}>\n      <Controller\n\
+    \        name=\"country\"\n        control={control}\n        render={({ field }) => (\n          <Select.Root onValueChange={field.onChange}\
+    \ value={field.value}>\n            <Select.Trigger className=\"select-trigger\">\n              <Select.Value placeholder=\"\
+    Select a country\" />\n              <Select.Icon />\n            </Select.Trigger>\n            \n            <Select.Portal>\n\
+    \              <Select.Content className=\"select-content\">\n                <Select.Viewport>\n                  <Select.Item\
+    \ value=\"us\">United States</Select.Item>\n                  <Select.Item value=\"ca\">Canada</Select.Item>\n       \
+    \           <Select.Item value=\"uk\">United Kingdom</Select.Item>\n                </Select.Viewport>\n             \
+    \ </Select.Content>\n            </Select.Portal>\n          </Select.Root>\n        )}\n      />\n      <button type=\"\
+    submit\">Submit</button>\n    </form>\n  );\n}\n```\n\n---\n\n## Troubleshooting\n\n### Problem: Dialog doesn't close\
+    \ on Escape key\n\n**Cause**: `onEscapeKeyDown` event prevented or `open` state not synced\n\n**Solution**:\n```tsx\n\
+    <Dialog.Root open={open} onOpenChange={setOpen}>\n  {/* Don't prevent default on escape */}\n</Dialog.Root>\n```\n\n###\
+    \ Problem: Dropdown menu positioning is off\n\n**Cause**: Parent container has `overflow: hidden` or transform\n\n**Solution**:\n\
+    ```tsx\n// Use Portal to render outside overflow container\n<DropdownMenu.Portal>\n  <DropdownMenu.Content />\n</DropdownMenu.Portal>\n\
+    ```\n\n### Problem: Animations don't work\n\n**Cause**: Portal content unmounts immediately\n\n**Solution**:\n```tsx\n\
+    // Use forceMount + AnimatePresence\n<Dialog.Portal forceMount>\n  <AnimatePresence>\n    {open && <Dialog.Content />}\n\
+    \  </AnimatePresence>\n</Dialog.Portal>\n```\n\n### Problem: TypeScript errors with `asChild`\n\n**Cause**: Type inference\
+    \ issues with polymorphic components\n\n**Solution**:\n```tsx\n// Explicitly type your component\n<Dialog.Trigger asChild>\n\
+    \  <button type=\"button\">Open</button>\n</Dialog.Trigger>\n```\n\n---\n\n## Performance Optimization\n\n### 1. Code\
+    \ Splitting\n\n```tsx\n// Lazy load heavy primitives\nconst Dialog = lazy(() => import('@radix-ui/react-dialog'));\nconst\
+    \ DropdownMenu = lazy(() => import('@radix-ui/react-dropdown-menu'));\n```\n\n### 2. Portal Container Reuse\n\n```tsx\n\
+    // Create portal container once\n<Tooltip.Provider>\n  {/* All tooltips share portal container */}\n  <Tooltip.Root>...</Tooltip.Root>\n\
+    \  <Tooltip.Root>...</Tooltip.Root>\n</Tooltip.Provider>\n```\n\n### 3. Memoization\n\n```tsx\n// Memoize expensive render\
+    \ functions\nconst SelectItems = memo(({ items }) => (\n  items.map((item) => <Select.Item key={item.value} value={item.value}\
+    \ />)\n));\n```\n\n---\n\n## Integration with Popular Tools\n\n### shadcn/ui (Built on Radix)\n\nshadcn/ui is a collection\
+    \ of copy-paste components built with Radix + Tailwind.\n\n```bash\nnpx shadcn-ui@latest init\nnpx shadcn-ui@latest add\
+    \ dialog\n```\n\n**When to use shadcn vs raw Radix**:\n- Use shadcn: Quick prototyping, standard designs\n- Use raw Radix:\
+    \ Full customization, unique designs\n\n### Radix Themes (Official Styled System)\n\n```tsx\nimport { Theme, Button, Dialog\
+    \ } from '@radix-ui/themes';\n\nfunction App() {\n  return (\n    <Theme accentColor=\"crimson\" grayColor=\"sand\">\n\
+    \      <Button>Click me</Button>\n    </Theme>\n  );\n}\n```\n\n---\n\n## Related Skills\n\n- `@tailwind-design-system`\
+    \ - Tailwind + Radix integration patterns\n- `@react-patterns` - React composition patterns\n- `@frontend-design` - Overall\
+    \ frontend architecture\n- `@accessibility-compliance` - WCAG compliance testing\n\n---\n\n## Resources\n\n### Official\
+    \ Documentation\n- [Radix UI Docs](https://www.radix-ui.com/primitives)\n- [Radix Colors](https://www.radix-ui.com/colors)\
+    \ - Accessible color system\n- [Radix Icons](https://www.radix-ui.com/icons) - Icon library\n\n### Community Resources\n\
+    - [shadcn/ui](https://ui.shadcn.com) - Component collection\n- [Radix UI Discord](https://discord.com/invite/7Xb99uG)\
+    \ - Community support\n- [CVA Documentation](https://cva.style/docs) - Variant management\n\n### Examples\n- [Radix Playground](https://www.radix-ui.com/primitives/docs/overview/introduction#try-it-out)\n\
+    - [shadcn/ui Source](https://github.com/shadcn-ui/ui) - Production examples\n\n---\n\n## Quick Reference\n\n### Installation\n\
+    ```bash\nnpm install @radix-ui/react-{primitive-name}\n```\n\n### Basic Pattern\n```tsx\n<Primitive.Root>\n  <Primitive.Trigger\
+    \ />\n  <Primitive.Portal>\n    <Primitive.Content />\n  </Primitive.Portal>\n</Primitive.Root>\n```\n\n### Key Props\n\
+    - `asChild` - Render as child element\n- `defaultValue` - Uncontrolled default\n- `value` / `onValueChange` - Controlled\
+    \ state\n- `open` / `onOpenChange` - Open state\n- `side` / `align` - Positioning\n\n---\n\n**Remember**: Radix gives\
+    \ you **behavior**, you give it **beauty**. Accessibility is built-in, customization is unlimited."
+edges:
+- to: tailwind-design-system
+  type: collaborates_with
+- to: core-components
+  type: collaborates_with
+- to: ui-ux-pro-max
+  type: collaborates_with
+- to: frontend-design
+  type: collaborates_with
+- to: ui-ux-designer
+  type: collaborates_with

@@ -1,0 +1,107 @@
+id: youtube-summarizer
+name: youtube-summarizer
+type: domain
+author: Eric Andrade
+version: 1.0.0
+description: Extract transcripts from YouTube videos and generate comprehensive, detailed summaries using intelligent analysis
+  frameworks
+priority: 2
+payload:
+  instructions: "# youtube-summarizer\n\n## Purpose\n\nThis skill extracts transcripts from YouTube videos and generates comprehensive,\
+    \ verbose summaries using the STAR + R-I-S-E framework. It validates video availability, extracts transcripts using the\
+    \ `youtube-transcript-api` Python library, and produces detailed documentation capturing all insights, arguments, and\
+    \ key points.\n\nThe skill is designed for users who need thorough content analysis and reference documentation from educational\
+    \ videos, lectures, tutorials, or informational content.\n\n## When to Use This Skill\n\nThis skill should be used when:\n\
+    \n- User provides a YouTube video URL and wants a detailed summary\n- User needs to document video content for reference\
+    \ without rewatching\n- User wants to extract insights, key points, and arguments from educational content\n- User needs\
+    \ transcripts from YouTube videos for analysis\n- User asks to \"summarize\", \"resume\", or \"extract content\" from\
+    \ YouTube videos\n- User wants comprehensive documentation prioritizing completeness over brevity\n\n## Step 0: Discovery\
+    \ & Setup\n\nBefore processing videos, validate the environment and dependencies:\n\n```bash\n# Check if youtube-transcript-api\
+    \ is installed\npython3 -c \"import youtube_transcript_api\" 2>/dev/null\nif [ $? -ne 0 ]; then\n    echo \"⚠️  youtube-transcript-api\
+    \ not found\"\n    # Offer to install\nfi\n\n# Check Python availability\nif ! command -v python3 &>/dev/null; then\n\
+    \    echo \"❌ Python 3 is required but not installed\"\n    exit 1\nfi\n```\n\n**Ask the user if dependency is missing:**\n\
+    \n```\nyoutube-transcript-api is required but not installed.\n\nWould you like to install it now?\n- [ ] Yes - Install\
+    \ with pip (pip install youtube-transcript-api)\n- [ ] No - I'll install it manually\n```\n\n**If user selects \"Yes\"\
+    :**\n\n```bash\npip install youtube-transcript-api\n```\n\n**Verify installation:**\n\n```bash\npython3 -c \"import youtube_transcript_api;\
+    \ print('✅ youtube-transcript-api installed successfully')\"\n```\n\n## Main Workflow\n\n### Progress Tracking Guidelines\n\
+    \nThroughout the workflow, display a visual progress gauge before each step to keep the user informed. The gauge format\
+    \ is:\n\n```bash\necho \"[████░░░░░░░░░░░░░░░░] 20% - Step 1/5: Validating URL\"\n```\n\n**Format specifications:**\n\
+    - 20 characters wide (use █ for filled, ░ for empty)\n- Percentage increments: Step 1=20%, Step 2=40%, Step 3=60%, Step\
+    \ 4=80%, Step 5=100%\n- Step counter showing current/total (e.g., \"Step 3/5\")\n- Brief description of current phase\n\
+    \n**Display the initial status box before Step 1:**\n\n```\n╔══════════════════════════════════════════════════════════════╗\n\
+    ║     \U0001F4F9  YOUTUBE SUMMARIZER - Processing Video                ║\n╠══════════════════════════════════════════════════════════════╣\n\
+    ║ → Step 1: Validating URL                 [IN PROGRESS]       ║\n║ ○ Step 2: Checking Availability                  \
+    \            ║\n║ ○ Step 3: Extracting Transcript                              ║\n║ ○ Step 4: Generating Summary     \
+    \                            ║\n║ ○ Step 5: Formatting Output                                  ║\n╠══════════════════════════════════════════════════════════════╣\n\
+    ║ Progress: ██████░░░░░░░░░░░░░░░░░░░░░░░░  20%               ║\n╚══════════════════════════════════════════════════════════════╝\n\
+    ```\n\n### Step 1: Validate YouTube URL\n\n**Objective:** Extract video ID and validate URL format.\n\n**Supported URL\
+    \ Formats:**\n- `https://www.youtube.com/watch?v=VIDEO_ID`\n- `https://youtube.com/watch?v=VIDEO_ID`\n- `https://youtu.be/VIDEO_ID`\n\
+    - `https://m.youtube.com/watch?v=VIDEO_ID`\n\n**Actions:**\n\n```bash\n# Extract video ID using regex or URL parsing\n\
+    URL=\"$USER_PROVIDED_URL\"\n\n# Pattern 1: youtube.com/watch?v=VIDEO_ID\nif echo \"$URL\" | grep -qE 'youtube\\.com/watch\\\
+    ?v='; then\n    VIDEO_ID=$(echo \"$URL\" | sed -E 's/.*[?&]v=([^&]+).*/\\1/')\n# Pattern 2: youtu.be/VIDEO_ID  \nelif\
+    \ echo \"$URL\" | grep -qE 'youtu\\.be/'; then\n    VIDEO_ID=$(echo \"$URL\" | sed -E 's/.*youtu\\.be\\/([^?]+).*/\\1/')\n\
+    else\n    echo \"❌ Invalid YouTube URL format\"\n    exit 1\nfi\n\necho \"\U0001F4F9 Video ID extracted: $VIDEO_ID\"\n\
+    ```\n\n**If URL is invalid:**\n\n```\n❌ Invalid YouTube URL\n\nPlease provide a valid YouTube URL in one of these formats:\n\
+    - https://www.youtube.com/watch?v=VIDEO_ID\n- https://youtu.be/VIDEO_ID\n\nExample: https://www.youtube.com/watch?v=dQw4w9WgXcQ\n\
+    ```\n\n### Step 2: Check Video & Transcript Availability\n\n**Progress:**\n```bash\necho \"[████████░░░░░░░░░░░░] 40%\
+    \ - Step 2/5: Checking Availability\"\n```\n\n**Objective:** Verify video exists and transcript is accessible.\n\n**Actions:**\n\
+    \n```python\nfrom youtube_transcript_api import YouTubeTranscriptApi, TranscriptsDisabled, NoTranscriptFound\nimport sys\n\
+    \nvideo_id = sys.argv[1]\n\ntry:\n    # Get list of available transcripts\n    transcript_list = YouTubeTranscriptApi.list_transcripts(video_id)\n\
+    \    \n    print(f\"✅ Video accessible: {video_id}\")\n    print(\"\U0001F4DD Available transcripts:\")\n    \n    for\
+    \ transcript in transcript_list:\n        print(f\"  - {transcript.language} ({transcript.language_code})\")\n       \
+    \ if transcript.is_generated:\n            print(\"    [Auto-generated]\")\n    \nexcept TranscriptsDisabled:\n    print(f\"\
+    ❌ Transcripts are disabled for video {video_id}\")\n    sys.exit(1)\n    \nexcept NoTranscriptFound:\n    print(f\"❌ No\
+    \ transcript found for video {video_id}\")\n    sys.exit(1)\n    \nexcept Exception as e:\n    print(f\"❌ Error accessing\
+    \ video: {e}\")\n    sys.exit(1)\n```\n\n**Error Handling:**\n\n| Error | Message | Action |\n|-------|---------|--------|\n\
+    | Video not found | \"❌ Video does not exist or is private\" | Ask user to verify URL |\n| Transcripts disabled | \"❌\
+    \ Transcripts are disabled for this video\" | Cannot proceed |\n| No transcript available | \"❌ No transcript found (not\
+    \ auto-generated or manually added)\" | Cannot proceed |\n| Private/restricted video | \"❌ Video is private or restricted\"\
+    \ | Ask for public video |\n\n### Step 3: Extract Transcript\n\n**Progress:**\n```bash\necho \"[████████████░░░░░░░░]\
+    \ 60% - Step 3/5: Extracting Transcript\"\n```\n\n**Objective:** Retrieve transcript in preferred language.\n\n**Actions:**\n\
+    \n```python\nfrom youtube_transcript_api import YouTubeTranscriptApi\n\nvideo_id = \"VIDEO_ID\"\n\ntry:\n    # Try to\
+    \ get transcript in user's preferred language first\n    # Fall back to English if not available\n    transcript = YouTubeTranscriptApi.get_transcript(\n\
+    \        video_id, \n        languages=['pt', 'en']  # Prefer Portuguese, fallback to English\n    )\n    \n    # Combine\
+    \ transcript segments into full text\n    full_text = \" \".join([entry['text'] for entry in transcript])\n    \n    #\
+    \ Get video metadata\n    from youtube_transcript_api import YouTubeTranscriptApi\n    transcript_list = YouTubeTranscriptApi.list_transcripts(video_id)\n\
+    \    \n    print(\"✅ Transcript extracted successfully\")\n    print(f\"\U0001F4CA Transcript length: {len(full_text)}\
+    \ characters\")\n    \n    # Save to temporary file for processing\n    with open(f\"/tmp/transcript_{video_id}.txt\"\
+    , \"w\") as f:\n        f.write(full_text)\n    \nexcept Exception as e:\n    print(f\"❌ Error extracting transcript:\
+    \ {e}\")\n    exit(1)\n```\n\n**Transcript Processing:**\n\n- Combine all transcript segments into coherent text\n- Preserve\
+    \ punctuation and formatting where available\n- Remove duplicate or overlapping segments (if auto-generated artifacts)\n\
+    - Store in temporary file for analysis\n\n### Step 4: Generate Comprehensive Summary\n\n**Progress:**\n```bash\necho \"\
+    [████████████████░░░░] 80% - Step 4/5: Generating Summary\"\n```\n\n**Objective:** Apply enhanced STAR + R-I-S-E prompt\
+    \ to create detailed summary.\n\n**Prompt Applied:**\n\nUse the enhanced prompt from Phase 2 (STAR + R-I-S-E framework)\
+    \ with the extracted transcript as input.\n\n**Actions:**\n\n1. Load the full transcript text\n2. Apply the comprehensive\
+    \ summarization prompt\n3. Use AI model (Claude/GPT) to generate structured summary\n4. Ensure output follows the defined\
+    \ structure:\n   - Header with video metadata\n   - Executive synthesis\n   - Detailed section-by-section breakdown\n\
+    \   - Key insights and conclusions\n   - Concepts and terminology\n   - Resources and references\n\n**Implementation:**\n\
+    \n```bash\n# Use the transcript file as input to the AI prompt\nTRANSCRIPT_FILE=\"/tmp/transcript_${VIDEO_ID}.txt\"\n\n\
+    # The AI agent will:\n# 1. Read the transcript\n# 2. Apply the STAR + R-I-S-E summarization framework\n# 3. Generate comprehensive\
+    \ Markdown output\n# 4. Structure with headers, lists, and highlights\n\nRead \"$TRANSCRIPT_FILE\"  # Read transcript\
+    \ into context\n```\n\nThen apply the full summarization prompt (from enhanced version in Phase 2).\n\n### Step 5: Format\
+    \ and Present Output\n\n**Progress:**\n```bash\necho \"[████████████████████] 100% - Step 5/5: Formatting Output\"\n```\n\
+    \n**Objective:** Deliver the summary in clean, well-structured Markdown.\n\n**Output Structure:**\n\n```markdown\n# [Video\
+    \ Title]\n\n**Canal:** [Channel Name]  \n**Duração:** [Duration]  \n**URL:** [https://youtube.com/watch?v=VIDEO_ID]  \n\
+    **Data de Publicação:** [Date if available]\n\n\n## \U0001F4DD Detailed Summary\n\n### [Topic 1]\n\n[Comprehensive explanation\
+    \ with examples, data, quotes...]\n\n#### [Subtopic 1.1]\n\n[Detailed breakdown...]\n\n### [Topic 2]\n\n[Continued detailed\
+    \ analysis...]\n\n\n## \U0001F4DA Concepts and Terminology\n\n- **[Term 1]:** [Definition and context]\n- **[Term 2]:**\
+    \ [Definition and context]\n\n\n## \U0001F4CC Conclusion\n\n[Final synthesis and takeaways]\n\n\n### **Example 2: Missing\
+    \ Dependency**\n\n**User Input:**\n```\nclaude> summarize this youtube video https://youtu.be/abc123\n```\n\n**Skill Response:**\n\
+    \n```\n⚠️  youtube-transcript-api not installed\n\nThis skill requires the Python library 'youtube-transcript-api'.\n\n\
+    Would you like me to install it now?\n- [ ] Yes - Install with pip\n- [ ] No - I'll install manually\n```\n\n**User selects\
+    \ \"Yes\":**\n\n```bash\n$ pip install youtube-transcript-api\nSuccessfully installed youtube-transcript-api-0.6.1\n\n\
+    ✅ Installation complete! Proceeding with video summary...\n```\n\n\n### **Example 4: Invalid URL**\n\n**User Input:**\n\
+    ```\nclaude> summarize youtube video www.youtube.com/some-video\n```\n\n**Skill Response:**\n\n```\n❌ Invalid YouTube\
+    \ URL format\n\nExpected format examples:\n- https://www.youtube.com/watch?v=VIDEO_ID\n- https://youtu.be/VIDEO_ID\n\n\
+    Please provide a valid YouTube video URL.\n```\n\n\n## \U0001F4CA Executive Summary\n\nThis video provides a comprehensive\
+    \ introduction to the fundamental concepts of Artificial Intelligence (AI), designed for beginners and professionals who\
+    \ want to understand the technical foundations and practical applications of modern AI. The instructor covers everything\
+    \ from basic definitions to machine learning algorithms, using practical examples and visualizations to facilitate understanding.\n\
+    \n[... continued detailed summary ...]\n```\n\n**Save Options:**\n\n```\nWhat would you like to save?\n→ Summary + raw\
+    \ transcript\n\n✅ File saved: resumo-exemplo123-2026-02-01.md (includes raw transcript)\n[████████████████████] 100% -\
+    \ ✓ Processing complete!\n```\n\n\nWelcome to this comprehensive tutorial on machine learning fundamentals. In today's\
+    \ video, we'll explore the core concepts that power modern AI systems...\n```\n\n\n**Version:** 1.2.0\n**Last Updated:**\
+    \ 2026-02-02\n**Maintained By:** Eric Andrade"
+edges:
+- to: youtube-automation
+  type: collaborates_with

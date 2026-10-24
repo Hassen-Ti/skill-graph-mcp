@@ -9,7 +9,7 @@
 |---|---|---|
 | CRITICAL | 3 | Fixed in v1.0 |
 | HIGH | 7 | Fixed in v1.0 |
-| MEDIUM | 1 | Open (lock file) |
+| MEDIUM | 1 | Fixed 2026-08-27 |
 
 All CRITICAL and HIGH findings resolved before first public release.
 
@@ -36,6 +36,10 @@ All CRITICAL and HIGH findings resolved before first public release.
 **[HIGH-6]** `os.environ["OPENAI_API_KEY"]` → opaque `KeyError`. Fixed: descriptive error message.
 
 **[HIGH-7]** Absolute Windows path hardcoded in `convert_skills.py`. Fixed: `SKILLS_LIB_PATH` env var.
+
+## MEDIUM findings — Fixed
+
+**[MED-1]** No dependency lock file — `pyproject.toml` only declared loose `>=` version constraints (e.g. `neo4j>=5.0.0`, `openai>=1.0.0`), so two installs at different times could silently resolve different transitive dependency versions, making builds non-reproducible and widening supply-chain exposure to any breaking/malicious release of a transitive dependency. Fixed 2026-08-27: committed `uv.lock` (generated via `uv lock`), pinning exact resolved versions for all 58 packages. `uv sync` now installs an identical, reproducible environment every time.
 
 ## Not found
 

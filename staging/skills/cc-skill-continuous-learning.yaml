@@ -1,0 +1,17 @@
+id: cc-skill-continuous-learning
+name: cc-skill-continuous-learning
+type: domain
+author: affaan-m
+version: 1.0.0
+description: Development skill from everything-claude-code
+priority: 2
+payload:
+  instructions: |-
+    # cc-skill-continuous-learning
+
+    Development skill skill.
+edges:
+- to: cc-skill-strategic-compact
+  type: collaborates_with
+- to: skill-developer
+  type: collaborates_with

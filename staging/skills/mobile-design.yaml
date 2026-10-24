@@ -1,0 +1,90 @@
+id: mobile-design
+name: mobile-design
+type: domain
+author: sklills_lib
+version: 1.0.0
+description: Mobile-first design and engineering doctrine for iOS and Android apps. Covers touch interaction, performance,
+  platform conventions, offline behavior, and mobile-specific decision-making. Teaches principles and constraints, not fixed
+  layouts. Use for React Native, Flutter, or native mobile apps.
+priority: 2
+payload:
+  instructions: "# Mobile Design System\n\n**(Mobile-First · Touch-First · Platform-Respectful)**\n\n> **Philosophy:** Touch-first.\
+    \ Battery-conscious. Platform-respectful. Offline-capable.\n> **Core Law:** Mobile is NOT a small desktop.\n> **Operating\
+    \ Rule:** Think constraints first, aesthetics second.\n\nThis skill exists to **prevent desktop-thinking, AI-defaults,\
+    \ and unsafe assumptions** when designing or building mobile applications.\n\n---\n\n## 1. Mobile Feasibility & Risk Index\
+    \ (MFRI)\n\nBefore designing or implementing **any mobile feature or screen**, assess feasibility.\n\n### MFRI Dimensions\
+    \ (1–5)\n\n| Dimension                  | Question                                                          |\n| --------------------------\
+    \ | ----------------------------------------------------------------- |\n| **Platform Clarity**       | Is the target\
+    \ platform (iOS / Android / both) explicitly defined? |\n| **Interaction Complexity** | How complex are gestures, flows,\
+    \ or navigation?                   |\n| **Performance Risk**       | Does this involve lists, animations, heavy state,\
+    \ or media?       |\n| **Offline Dependence**     | Does the feature break or degrade without network?               \
+    \ |\n| **Accessibility Risk**     | Does this impact motor, visual, or cognitive accessibility?       |\n\n### Score Formula\n\
+    \n```\nMFRI = (Platform Clarity + Accessibility Readiness)\n       − (Interaction Complexity + Performance Risk + Offline\
+    \ Dependence)\n```\n\n**Range:** `-10 → +10`\n\n### Interpretation\n\n| MFRI     | Meaning   | Required Action       \
+    \                |\n| -------- | --------- | ------------------------------------- |\n| **6–10** | Safe      | Proceed\
+    \ normally                      |\n| **3–5**  | Moderate  | Add performance + UX validation       |\n| **0–2**  | Risky\
+    \     | Simplify interactions or architecture |\n| **< 0**  | Dangerous | Redesign before implementation        |\n\n\
+    ---\n\n## 2. Mandatory Thinking Before Any Work\n\n### ⛔ STOP: Ask Before Assuming (Required)\n\nIf **any of the following\
+    \ are not explicitly stated**, you MUST ask before proceeding:\n\n| Aspect     | Question                            \
+    \       | Why                                      |\n| ---------- | ------------------------------------------ | ----------------------------------------\
+    \ |\n| Platform   | iOS, Android, or both?                     | Affects navigation, gestures, typography |\n| Framework\
+    \  | React Native, Flutter, or native?          | Determines performance and patterns      |\n| Navigation | Tabs, stack,\
+    \ drawer?                       | Core UX architecture                     |\n| Offline    | Must it work offline?   \
+    \                   | Data & sync strategy                     |\n| Devices    | Phone only or tablet too?           \
+    \       | Layout & density rules                   |\n| Audience   | Consumer, enterprise, accessibility needs? | Touch\
+    \ & readability                      |\n\n\U0001F6AB **Never default to your favorite stack or pattern.**\n\n---\n\n##\
+    \ 3. Mandatory Reference Reading (Enforced)\n\n### Universal (Always Read First)\n\n| File                          |\
+    \ Purpose                            | Status            |\n| ----------------------------- | ----------------------------------\
+    \ | ----------------- |\n| **mobile-design-thinking.md** | Anti-memorization, context-forcing | \U0001F534 REQUIRED FIRST\
+    \ |\n| **touch-psychology.md**       | Fitts’ Law, thumb zones, gestures  | \U0001F534 REQUIRED       |\n| **mobile-performance.md**\
+    \     | 60fps, memory, battery             | \U0001F534 REQUIRED       |\n| **mobile-backend.md**         | Offline sync,\
+    \ push, APIs           | \U0001F534 REQUIRED       |\n| **mobile-testing.md**         | Device & E2E testing         \
+    \      | \U0001F534 REQUIRED       |\n| **mobile-debugging.md**       | Native vs JS debugging             | \U0001F534\
+    \ REQUIRED       |\n\n### Platform-Specific (Conditional)\n\n| Platform       | File                |\n| --------------\
+    \ | ------------------- |\n| iOS            | platform-ios.md     |\n| Android        | platform-android.md |\n| Cross-platform\
+    \ | BOTH above          |\n\n> ❌ If you haven’t read the platform file, you are not allowed to design UI.\n\n---\n\n##\
+    \ 4. AI Mobile Anti-Patterns (Hard Bans)\n\n### \U0001F6AB Performance Sins (Non-Negotiable)\n\n| ❌ Never            \
+    \       | Why                  | ✅ Always                                |\n| ------------------------- | --------------------\
+    \ | --------------------------------------- |\n| ScrollView for long lists | Memory explosion     | FlatList / FlashList\
+    \ / ListView.builder |\n| Inline renderItem         | Re-renders all rows  | useCallback + memo                      |\n\
+    | Index as key              | Reorder bugs         | Stable ID                               |\n| JS-thread animations\
+    \      | Jank                 | Native driver / GPU                     |\n| console.log in prod       | JS thread block\
+    \      | Strip logs                              |\n| No memoization            | Battery + perf drain | React.memo /\
+    \ const widgets              |\n\n---\n\n### \U0001F6AB Touch & UX Sins\n\n| ❌ Never               | Why             \
+    \     | ✅ Always          |\n| --------------------- | -------------------- | ----------------- |\n| Touch <44–48px  \
+    \      | Miss taps            | Min touch target  |\n| Gesture-only action   | Excludes users       | Button fallback\
+    \   |\n| No loading state      | Feels broken         | Explicit feedback |\n| No error recovery     | Dead end      \
+    \       | Retry + message   |\n| Ignore platform norms | Muscle memory broken | iOS ≠ Android     |\n\n---\n\n### \U0001F6AB\
+    \ Security Sins\n\n| ❌ Never                | Why                | ✅ Always               |\n| ----------------------\
+    \ | ------------------ | ---------------------- |\n| Tokens in AsyncStorage | Easily stolen      | SecureStore / Keychain\
+    \ |\n| Hardcoded secrets      | Reverse engineered | Env + secure storage   |\n| No SSL pinning         | MITM risk  \
+    \        | Cert pinning           |\n| Log sensitive data     | PII leakage        | Never log secrets      |\n\n---\n\
+    \n## 5. Platform Unification vs Divergence Matrix\n\n```\nUNIFY                          DIVERGE\n──────────────────────────\
+    \     ─────────────────────────\nBusiness logic                Navigation behavior\nData models                    Gestures\n\
+    API contracts                  Icons\nValidation                     Typography\nError semantics                Pickers\
+    \ / dialogs\n```\n\n### Platform Defaults\n\n| Element   | iOS          | Android        |\n| --------- | ------------\
+    \ | -------------- |\n| Font      | SF Pro       | Roboto         |\n| Min touch | 44pt         | 48dp           |\n|\
+    \ Back      | Edge swipe   | System back    |\n| Sheets    | Bottom sheet | Dialog / sheet |\n| Icons     | SF Symbols\
+    \   | Material Icons |\n\n---\n\n## 6. Mobile UX Psychology (Non-Optional)\n\n### Fitts’ Law (Touch Reality)\n\n* Finger\
+    \ ≠ cursor\n* Accuracy is low\n* Reach matters more than precision\n\n**Rules:**\n\n* Primary CTAs live in **thumb zone**\n\
+    * Destructive actions pushed away\n* No hover assumptions\n\n---\n\n## 7. Performance Doctrine\n\n### React Native (Required\
+    \ Pattern)\n\n```ts\nconst Row = React.memo(({ item }) => (\n  <View><Text>{item.title}</Text></View>\n));\n\nconst renderItem\
+    \ = useCallback(\n  ({ item }) => <Row item={item} />,\n  []\n);\n\n<FlatList\n  data={items}\n  renderItem={renderItem}\n\
+    \  keyExtractor={(i) => i.id}\n  getItemLayout={(_, i) => ({\n    length: ITEM_HEIGHT,\n    offset: ITEM_HEIGHT * i,\n\
+    \    index: i,\n  })}\n/>\n```\n\n### Flutter (Required Pattern)\n\n```dart\nclass Item extends StatelessWidget {\n  const\
+    \ Item({super.key});\n\n  @override\n  Widget build(BuildContext context) {\n    return const Text('Static');\n  }\n}\n\
+    ```\n\n* `const` everywhere possible\n* Targeted rebuilds only\n\n---\n\n## 8. Mandatory Mobile Checkpoint\n\nBefore writing\
+    \ **any code**, you must complete this:\n\n```\n\U0001F9E0 MOBILE CHECKPOINT\n\nPlatform:     ___________\nFramework:\
+    \    ___________\nFiles Read:   ___________\n\n3 Principles I Will Apply:\n1.\n2.\n3.\n\nAnti-Patterns I Will Avoid:\n\
+    1.\n2.\n```\n\n❌ Cannot complete → go back and read.\n\n---\n\n## 9. Framework Decision Tree (Canonical)\n\n```\nNeed\
+    \ OTA + web team → React Native + Expo\nHigh-perf UI → Flutter\niOS only → SwiftUI\nAndroid only → Compose\n```\n\nNo\
+    \ debate without justification.\n\n---\n\n## 10. Release Readiness Checklist\n\n### Before Shipping\n\n* [ ] Touch targets\
+    \ ≥ 44–48px\n* [ ] Offline handled\n* [ ] Secure storage used\n* [ ] Lists optimized\n* [ ] Logs stripped\n* [ ] Tested\
+    \ on low-end devices\n* [ ] Accessibility labels present\n* [ ] MFRI ≥ 3\n\n---\n\n## 11. Related Skills\n\n* **frontend-design**\
+    \ – Visual systems & components\n* **frontend-dev-guidelines** – RN/TS architecture\n* **backend-dev-guidelines** – Mobile-safe\
+    \ APIs\n* **error-tracking** – Crash & performance telemetry\n\n---\n\n> **Final Law:**\n> Mobile users are distracted,\
+    \ interrupted, and impatient—often using one hand on a bad network with low battery.\n> **Design for that reality, or\
+    \ your app will fail quietly.**\n\n---"
+edges:
+- to: mobile-developer
+  type: collaborates_with

@@ -1,0 +1,209 @@
+id: voice-ai-engine-development
+name: voice-ai-engine-development
+type: domain
+author: sklills_lib
+version: 1.0.0
+description: Build real-time conversational AI voice engines using async worker pipelines, streaming transcription, LLM agents,
+  and TTS synthesis with interrupt handling and multi-provider support
+priority: 2
+payload:
+  instructions: "# Voice AI Engine Development\n\n## Overview\n\nThis skill guides you through building production-ready voice\
+    \ AI engines with real-time conversation capabilities. Voice AI engines enable natural, bidirectional conversations between\
+    \ users and AI agents through streaming audio processing, speech-to-text transcription, LLM-powered responses, and text-to-speech\
+    \ synthesis.\n\nThe core architecture uses an async queue-based worker pipeline where each component runs independently\
+    \ and communicates via `asyncio.Queue` objects, enabling concurrent processing, interrupt handling, and real-time streaming\
+    \ at every stage.\n\n## When to Use This Skill\n\nUse this skill when:\n- Building real-time voice conversation systems\n\
+    - Implementing voice assistants or chatbots\n- Creating voice-enabled customer service agents\n- Developing voice AI applications\
+    \ with interrupt capabilities\n- Integrating multiple transcription, LLM, or TTS providers\n- Working with streaming audio\
+    \ processing pipelines\n- The user mentions Vocode, voice engines, or conversational AI\n\n## Core Architecture Principles\n\
+    \n### The Worker Pipeline Pattern\n\nEvery voice AI engine follows this pipeline:\n\n```\nAudio In → Transcriber → Agent\
+    \ → Synthesizer → Audio Out\n           (Worker 1)   (Worker 2)  (Worker 3)\n```\n\n**Key Benefits:**\n- **Decoupling**:\
+    \ Workers only know about their input/output queues\n- **Concurrency**: All workers run simultaneously via asyncio\n-\
+    \ **Backpressure**: Queues automatically handle rate differences\n- **Interruptibility**: Everything can be stopped mid-stream\n\
+    \n### Base Worker Pattern\n\nEvery worker follows this pattern:\n\n```python\nclass BaseWorker:\n    def __init__(self,\
+    \ input_queue, output_queue):\n        self.input_queue = input_queue   # asyncio.Queue to consume from\n        self.output_queue\
+    \ = output_queue # asyncio.Queue to produce to\n        self.active = False\n    \n    def start(self):\n        \"\"\"\
+    Start the worker's processing loop\"\"\"\n        self.active = True\n        asyncio.create_task(self._run_loop())\n\
+    \    \n    async def _run_loop(self):\n        \"\"\"Main processing loop - runs forever until terminated\"\"\"\n    \
+    \    while self.active:\n            item = await self.input_queue.get()  # Block until item arrives\n            await\
+    \ self.process(item)              # Process the item\n    \n    async def process(self, item):\n        \"\"\"Override\
+    \ this - does the actual work\"\"\"\n        raise NotImplementedError\n    \n    def terminate(self):\n        \"\"\"\
+    Stop the worker\"\"\"\n        self.active = False\n```\n\n## Component Implementation Guide\n\n### 1. Transcriber (Audio\
+    \ → Text)\n\n**Purpose**: Converts incoming audio chunks to text transcriptions\n\n**Interface Requirements**:\n```python\n\
+    class BaseTranscriber:\n    def __init__(self, transcriber_config):\n        self.input_queue = asyncio.Queue()   # Audio\
+    \ chunks (bytes)\n        self.output_queue = asyncio.Queue()  # Transcriptions\n        self.is_muted = False\n    \n\
+    \    def send_audio(self, chunk: bytes):\n        \"\"\"Client calls this to send audio\"\"\"\n        if not self.is_muted:\n\
+    \            self.input_queue.put_nowait(chunk)\n        else:\n            # Send silence instead (prevents echo during\
+    \ bot speech)\n            self.input_queue.put_nowait(self.create_silent_chunk(len(chunk)))\n    \n    def mute(self):\n\
+    \        \"\"\"Called when bot starts speaking (prevents echo)\"\"\"\n        self.is_muted = True\n    \n    def unmute(self):\n\
+    \        \"\"\"Called when bot stops speaking\"\"\"\n        self.is_muted = False\n```\n\n**Output Format**:\n```python\n\
+    class Transcription:\n    message: str          # \"Hello, how are you?\"\n    confidence: float     # 0.95\n    is_final:\
+    \ bool        # True = complete sentence, False = partial\n    is_interrupt: bool    # Set by TranscriptionsWorker\n```\n\
+    \n**Supported Providers**:\n- **Deepgram** - Fast, accurate, streaming\n- **AssemblyAI** - High accuracy, good for accents\n\
+    - **Azure Speech** - Enterprise-grade\n- **Google Cloud Speech** - Multi-language support\n\n**Critical Implementation\
+    \ Details**:\n- Use WebSocket for bidirectional streaming\n- Run sender and receiver tasks concurrently with `asyncio.gather()`\n\
+    - Mute transcriber when bot speaks to prevent echo/feedback loops\n- Handle both final and partial transcriptions\n\n\
+    ### 2. Agent (Text → Response)\n\n**Purpose**: Processes user input and generates conversational responses\n\n**Interface\
+    \ Requirements**:\n```python\nclass BaseAgent:\n    def __init__(self, agent_config):\n        self.input_queue = asyncio.Queue()\
+    \   # TranscriptionAgentInput\n        self.output_queue = asyncio.Queue()  # AgentResponse\n        self.transcript =\
+    \ None               # Conversation history\n    \n    async def generate_response(self, human_input, is_interrupt, conversation_id):\n\
+    \        \"\"\"Override this - returns AsyncGenerator of responses\"\"\"\n        raise NotImplementedError\n```\n\n**Why\
+    \ Streaming Responses?**\n- **Lower latency**: Start speaking as soon as first sentence is ready\n- **Better interrupts**:\
+    \ Can stop mid-response\n- **Sentence-by-sentence**: More natural conversation flow\n\n**Supported Providers**:\n- **OpenAI**\
+    \ (GPT-4, GPT-3.5) - High quality, fast\n- **Google Gemini** - Multimodal, cost-effective\n- **Anthropic Claude** - Long\
+    \ context, nuanced responses\n\n**Critical Implementation Details**:\n- Maintain conversation history in `Transcript`\
+    \ object\n- Stream responses using `AsyncGenerator`\n- **IMPORTANT**: Buffer entire LLM response before yielding to synthesizer\
+    \ (prevents audio jumping)\n- Handle interrupts by canceling current generation task\n- Update conversation history with\
+    \ partial messages on interrupt\n\n### 3. Synthesizer (Text → Audio)\n\n**Purpose**: Converts agent text responses to\
+    \ speech audio\n\n**Interface Requirements**:\n```python\nclass BaseSynthesizer:\n    async def create_speech(self, message:\
+    \ BaseMessage, chunk_size: int) -> SynthesisResult:\n        \"\"\"\n        Returns a SynthesisResult containing:\n \
+    \       - chunk_generator: AsyncGenerator that yields audio chunks\n        - get_message_up_to: Function to get partial\
+    \ text (for interrupts)\n        \"\"\"\n        raise NotImplementedError\n```\n\n**SynthesisResult Structure**:\n```python\n\
+    class SynthesisResult:\n    chunk_generator: AsyncGenerator[ChunkResult, None]\n    get_message_up_to: Callable[[float],\
+    \ str]  # seconds → partial text\n    \n    class ChunkResult:\n        chunk: bytes          # Raw PCM audio\n      \
+    \  is_last_chunk: bool\n```\n\n**Supported Providers**:\n- **ElevenLabs** - Most natural voices, streaming\n- **Azure\
+    \ TTS** - Enterprise-grade, many languages\n- **Google Cloud TTS** - Cost-effective, good quality\n- **Amazon Polly**\
+    \ - AWS integration\n- **Play.ht** - Voice cloning\n\n**Critical Implementation Details**:\n- Stream audio chunks as they're\
+    \ generated\n- Convert audio to LINEAR16 PCM format (16kHz sample rate)\n- Implement `get_message_up_to()` for interrupt\
+    \ handling\n- Handle audio format conversion (MP3 → PCM)\n\n### 4. Output Device (Audio → Client)\n\n**Purpose**: Sends\
+    \ synthesized audio back to the client\n\n**CRITICAL: Rate Limiting for Interrupts**\n\n```python\nasync def send_speech_to_output(self,\
+    \ message, synthesis_result,\n                                stop_event, seconds_per_chunk):\n    chunk_idx = 0\n   \
+    \ async for chunk_result in synthesis_result.chunk_generator:\n        # Check for interrupt\n        if stop_event.is_set():\n\
+    \            logger.debug(f\"Interrupted after {chunk_idx} chunks\")\n            message_sent = synthesis_result.get_message_up_to(\n\
+    \                chunk_idx * seconds_per_chunk\n            )\n            return message_sent, True  # cut_off = True\n\
+    \        \n        start_time = time.time()\n        \n        # Send chunk to output device\n        self.output_device.consume_nonblocking(chunk_result.chunk)\n\
+    \        \n        # CRITICAL: Wait for chunk to play before sending next one\n        # This is what makes interrupts\
+    \ work!\n        speech_length = seconds_per_chunk\n        processing_time = time.time() - start_time\n        await\
+    \ asyncio.sleep(max(speech_length - processing_time, 0))\n        \n        chunk_idx += 1\n    \n    return message,\
+    \ False  # cut_off = False\n```\n\n**Why Rate Limiting?**\nWithout rate limiting, all audio chunks would be sent immediately,\
+    \ which would:\n- Buffer entire message on client side\n- Make interrupts impossible (all audio already sent)\n- Cause\
+    \ timing issues\n\nBy sending one chunk every N seconds:\n- Real-time playback is maintained\n- Interrupts can stop mid-sentence\n\
+    - Natural conversation flow is preserved\n\n## The Interrupt System\n\nThe interrupt system is critical for natural conversations.\n\
+    \n### How Interrupts Work\n\n**Scenario**: Bot is saying \"I think the weather will be nice today and tomorrow and—\"\
+    \ when user interrupts with \"Stop\".\n\n**Step 1: User starts speaking**\n```python\n# TranscriptionsWorker detects new\
+    \ transcription while bot speaking\nasync def process(self, transcription):\n    if not self.conversation.is_human_speaking:\
+    \  # Bot was speaking!\n        # Broadcast interrupt to all in-flight events\n        interrupted = self.conversation.broadcast_interrupt()\n\
+    \        transcription.is_interrupt = interrupted\n```\n\n**Step 2: broadcast_interrupt() stops everything**\n```python\n\
+    def broadcast_interrupt(self):\n    num_interrupts = 0\n    # Interrupt all queued events\n    while True:\n        try:\n\
+    \            interruptible_event = self.interruptible_events.get_nowait()\n            if interruptible_event.interrupt():\
+    \  # Sets interruption_event\n                num_interrupts += 1\n        except queue.Empty:\n            break\n  \
+    \  \n    # Cancel current tasks\n    self.agent.cancel_current_task()              # Stop generating text\n    self.agent_responses_worker.cancel_current_task()\
+    \  # Stop synthesizing\n    return num_interrupts > 0\n```\n\n**Step 3: SynthesisResultsWorker detects interrupt**\n```python\n\
+    async def send_speech_to_output(self, synthesis_result, stop_event, ...):\n    async for chunk_result in synthesis_result.chunk_generator:\n\
+    \        # Check stop_event (this is the interruption_event)\n        if stop_event.is_set():\n            logger.debug(\"\
+    Interrupted! Stopping speech.\")\n            # Calculate what was actually spoken\n            seconds_spoken = chunk_idx\
+    \ * seconds_per_chunk\n            partial_message = synthesis_result.get_message_up_to(seconds_spoken)\n            #\
+    \ e.g., \"I think the weather will be nice today\"\n            return partial_message, True  # cut_off = True\n```\n\n\
+    **Step 4: Agent updates history**\n```python\nif cut_off:\n    # Update conversation history with partial message\n  \
+    \  self.agent.update_last_bot_message_on_cut_off(message_sent)\n    # History now shows:\n    # Bot: \"I think the weather\
+    \ will be nice today\" (incomplete)\n```\n\n### InterruptibleEvent Pattern\n\nEvery event in the pipeline is wrapped in\
+    \ an `InterruptibleEvent`:\n\n```python\nclass InterruptibleEvent:\n    def __init__(self, payload, is_interruptible=True):\n\
+    \        self.payload = payload\n        self.is_interruptible = is_interruptible\n        self.interruption_event = threading.Event()\
+    \  # Initially not set\n        self.interrupted = False\n    \n    def interrupt(self) -> bool:\n        \"\"\"Interrupt\
+    \ this event\"\"\"\n        if not self.is_interruptible:\n            return False\n        if not self.interrupted:\n\
+    \            self.interruption_event.set()  # Signal to stop!\n            self.interrupted = True\n            return\
+    \ True\n        return False\n    \n    def is_interrupted(self) -> bool:\n        return self.interruption_event.is_set()\n\
+    ```\n\n## Multi-Provider Factory Pattern\n\nSupport multiple providers with a factory pattern:\n\n```python\nclass VoiceHandler:\n\
+    \    \"\"\"Multi-provider factory for voice components\"\"\"\n    \n    def create_transcriber(self, agent_config: Dict):\n\
+    \        \"\"\"Create transcriber based on transcriberProvider\"\"\"\n        provider = agent_config.get(\"transcriberProvider\"\
+    , \"deepgram\")\n        \n        if provider == \"deepgram\":\n            return self._create_deepgram_transcriber(agent_config)\n\
+    \        elif provider == \"assemblyai\":\n            return self._create_assemblyai_transcriber(agent_config)\n    \
+    \    elif provider == \"azure\":\n            return self._create_azure_transcriber(agent_config)\n        elif provider\
+    \ == \"google\":\n            return self._create_google_transcriber(agent_config)\n        else:\n            raise ValueError(f\"\
+    Unknown transcriber provider: {provider}\")\n    \n    def create_agent(self, agent_config: Dict):\n        \"\"\"Create\
+    \ LLM agent based on llmProvider\"\"\"\n        provider = agent_config.get(\"llmProvider\", \"openai\")\n        \n \
+    \       if provider == \"openai\":\n            return self._create_openai_agent(agent_config)\n        elif provider\
+    \ == \"gemini\":\n            return self._create_gemini_agent(agent_config)\n        else:\n            raise ValueError(f\"\
+    Unknown LLM provider: {provider}\")\n    \n    def create_synthesizer(self, agent_config: Dict):\n        \"\"\"Create\
+    \ voice synthesizer based on voiceProvider\"\"\"\n        provider = agent_config.get(\"voiceProvider\", \"elevenlabs\"\
+    )\n        \n        if provider == \"elevenlabs\":\n            return self._create_elevenlabs_synthesizer(agent_config)\n\
+    \        elif provider == \"azure\":\n            return self._create_azure_synthesizer(agent_config)\n        elif provider\
+    \ == \"google\":\n            return self._create_google_synthesizer(agent_config)\n        elif provider == \"polly\"\
+    :\n            return self._create_polly_synthesizer(agent_config)\n        elif provider == \"playht\":\n           \
+    \ return self._create_playht_synthesizer(agent_config)\n        else:\n            raise ValueError(f\"Unknown voice provider:\
+    \ {provider}\")\n```\n\n## WebSocket Integration\n\nVoice AI engines typically use WebSocket for bidirectional audio streaming:\n\
+    \n```python\n@app.websocket(\"/conversation\")\nasync def websocket_endpoint(websocket: WebSocket):\n    await websocket.accept()\n\
+    \    \n    # Create voice components\n    voice_handler = VoiceHandler()\n    transcriber = voice_handler.create_transcriber(agent_config)\n\
+    \    agent = voice_handler.create_agent(agent_config)\n    synthesizer = voice_handler.create_synthesizer(agent_config)\n\
+    \    \n    # Create output device\n    output_device = WebsocketOutputDevice(\n        ws=websocket,\n        sampling_rate=16000,\n\
+    \        audio_encoding=AudioEncoding.LINEAR16\n    )\n    \n    # Create conversation orchestrator\n    conversation\
+    \ = StreamingConversation(\n        output_device=output_device,\n        transcriber=transcriber,\n        agent=agent,\n\
+    \        synthesizer=synthesizer\n    )\n    \n    # Start all workers\n    await conversation.start()\n    \n    try:\n\
+    \        # Receive audio from client\n        async for message in websocket.iter_bytes():\n            conversation.receive_audio(message)\n\
+    \    except WebSocketDisconnect:\n        logger.info(\"Client disconnected\")\n    finally:\n        await conversation.terminate()\n\
+    ```\n\n## Common Pitfalls and Solutions\n\n### 1. Audio Jumping/Cutting Off\n\n**Problem**: Bot's audio jumps or cuts\
+    \ off mid-response.\n\n**Cause**: Sending text to synthesizer in small chunks causes multiple TTS calls.\n\n**Solution**:\
+    \ Buffer the entire LLM response before sending to synthesizer:\n\n```python\n# ❌ Bad: Yields sentence-by-sentence\nasync\
+    \ for sentence in llm_stream:\n    yield GeneratedResponse(message=BaseMessage(text=sentence))\n\n# ✅ Good: Buffer entire\
+    \ response\nfull_response = \"\"\nasync for chunk in llm_stream:\n    full_response += chunk\nyield GeneratedResponse(message=BaseMessage(text=full_response))\n\
+    ```\n\n### 2. Echo/Feedback Loop\n\n**Problem**: Bot hears itself speaking and responds to its own audio.\n\n**Cause**:\
+    \ Transcriber not muted during bot speech.\n\n**Solution**: Mute transcriber when bot starts speaking:\n\n```python\n\
+    # Before sending audio to output\nself.transcriber.mute()\n# After audio playback complete\nself.transcriber.unmute()\n\
+    ```\n\n### 3. Interrupts Not Working\n\n**Problem**: User can't interrupt bot mid-sentence.\n\n**Cause**: All audio chunks\
+    \ sent at once instead of rate-limited.\n\n**Solution**: Rate-limit audio chunks to match real-time playback:\n\n```python\n\
+    async for chunk in synthesis_result.chunk_generator:\n    start_time = time.time()\n    \n    # Send chunk\n    output_device.consume_nonblocking(chunk)\n\
+    \    \n    # Wait for chunk duration before sending next\n    processing_time = time.time() - start_time\n    await asyncio.sleep(max(seconds_per_chunk\
+    \ - processing_time, 0))\n```\n\n### 4. Memory Leaks from Unclosed Streams\n\n**Problem**: Memory usage grows over time.\n\
+    \n**Cause**: WebSocket connections or API streams not properly closed.\n\n**Solution**: Always use context managers and\
+    \ cleanup:\n\n```python\ntry:\n    async with websockets.connect(url) as ws:\n        # Use websocket\n        pass\n\
+    finally:\n    # Cleanup\n    await conversation.terminate()\n    await transcriber.terminate()\n```\n\n## Production Considerations\n\
+    \n### 1. Error Handling\n\n```python\nasync def _run_loop(self):\n    while self.active:\n        try:\n            item\
+    \ = await self.input_queue.get()\n            await self.process(item)\n        except Exception as e:\n            logger.error(f\"\
+    Worker error: {e}\", exc_info=True)\n            # Don't crash the worker, continue processing\n```\n\n### 2. Graceful\
+    \ Shutdown\n\n```python\nasync def terminate(self):\n    \"\"\"Gracefully shut down all workers\"\"\"\n    self.active\
+    \ = False\n    \n    # Stop all workers\n    self.transcriber.terminate()\n    self.agent.terminate()\n    self.synthesizer.terminate()\n\
+    \    \n    # Wait for queues to drain\n    await asyncio.sleep(0.5)\n    \n    # Close connections\n    if self.websocket:\n\
+    \        await self.websocket.close()\n```\n\n### 3. Monitoring and Logging\n\n```python\n# Log key events\nlogger.info(f\"\
+    \U0001F3A4 [TRANSCRIBER] Received: '{transcription.message}'\")\nlogger.info(f\"\U0001F916 [AGENT] Generating response...\"\
+    )\nlogger.info(f\"\U0001F50A [SYNTHESIZER] Synthesizing {len(text)} characters\")\nlogger.info(f\"⚠️ [INTERRUPT] User\
+    \ interrupted bot\")\n\n# Track metrics\nmetrics.increment(\"transcriptions.count\")\nmetrics.timing(\"agent.response_time\"\
+    , duration)\nmetrics.gauge(\"active_conversations\", count)\n```\n\n### 4. Rate Limiting and Quotas\n\n```python\n# Implement\
+    \ rate limiting for API calls\nfrom aiolimiter import AsyncLimiter\n\nrate_limiter = AsyncLimiter(max_rate=10, time_period=1)\
+    \  # 10 calls/second\n\nasync def call_api(self, data):\n    async with rate_limiter:\n        return await self.client.post(data)\n\
+    ```\n\n## Key Design Patterns\n\n### 1. Producer-Consumer with Queues\n\n```python\n# Producer\nasync def producer(queue):\n\
+    \    while True:\n        item = await generate_item()\n        queue.put_nowait(item)\n\n# Consumer\nasync def consumer(queue):\n\
+    \    while True:\n        item = await queue.get()\n        await process_item(item)\n```\n\n### 2. Streaming Generators\n\
+    \nInstead of returning complete results:\n\n```python\n# ❌ Bad: Wait for entire response\nasync def generate_response(prompt):\n\
+    \    response = await openai.complete(prompt)  # 5 seconds\n    return response\n\n# ✅ Good: Stream chunks as they arrive\n\
+    async def generate_response(prompt):\n    async for chunk in openai.complete(prompt, stream=True):\n        yield chunk\
+    \  # Yield after 0.1s, 0.2s, etc.\n```\n\n### 3. Conversation State Management\n\nMaintain conversation history for context:\n\
+    \n```python\nclass Transcript:\n    event_logs: List[Message] = []\n    \n    def add_human_message(self, text):\n   \
+    \     self.event_logs.append(Message(sender=Sender.HUMAN, text=text))\n    \n    def add_bot_message(self, text):\n  \
+    \      self.event_logs.append(Message(sender=Sender.BOT, text=text))\n    \n    def to_openai_messages(self):\n      \
+    \  return [\n            {\"role\": \"user\" if msg.sender == Sender.HUMAN else \"assistant\",\n             \"content\"\
+    : msg.text}\n            for msg in self.event_logs\n        ]\n```\n\n## Testing Strategies\n\n### 1. Unit Test Workers\
+    \ in Isolation\n\n```python\nasync def test_transcriber():\n    transcriber = DeepgramTranscriber(config)\n    \n    #\
+    \ Mock audio input\n    audio_chunk = b'\\x00\\x01\\x02...'\n    transcriber.send_audio(audio_chunk)\n    \n    # Check\
+    \ output\n    transcription = await transcriber.output_queue.get()\n    assert transcription.message == \"expected text\"\
+    \n```\n\n### 2. Integration Test Pipeline\n\n```python\nasync def test_full_pipeline():\n    # Create all components\n\
+    \    conversation = create_test_conversation()\n    \n    # Send test audio\n    conversation.receive_audio(test_audio_chunk)\n\
+    \    \n    # Wait for response\n    response = await wait_for_audio_output(timeout=5)\n    \n    assert response is not\
+    \ None\n```\n\n### 3. Test Interrupts\n\n```python\nasync def test_interrupt():\n    conversation = create_test_conversation()\n\
+    \    \n    # Start bot speaking\n    await conversation.agent.generate_response(\"Tell me a long story\")\n    \n    #\
+    \ Interrupt mid-response\n    await asyncio.sleep(1)  # Let it speak for 1 second\n    conversation.broadcast_interrupt()\n\
+    \    \n    # Verify partial message in transcript\n    last_message = conversation.transcript.event_logs[-1]\n    assert\
+    \ last_message.text != full_expected_message\n```\n\n## Implementation Workflow\n\nWhen implementing a voice AI engine:\n\
+    \n1. **Start with Base Workers**: Implement the base worker pattern first\n2. **Add Transcriber**: Choose a provider and\
+    \ implement streaming transcription\n3. **Add Agent**: Implement LLM integration with streaming responses\n4. **Add Synthesizer**:\
+    \ Implement TTS with audio streaming\n5. **Connect Pipeline**: Wire all workers together with queues\n6. **Add Interrupts**:\
+    \ Implement the interrupt system\n7. **Add WebSocket**: Create WebSocket endpoint for client communication\n8. **Test\
+    \ Components**: Unit test each worker in isolation\n9. **Test Integration**: Test the full pipeline end-to-end\n10. **Add\
+    \ Error Handling**: Implement robust error handling and logging\n11. **Optimize**: Add rate limiting, monitoring, and\
+    \ performance optimizations\n\n## Related Skills\n\n- `@websocket-patterns` - For WebSocket implementation details\n-\
+    \ `@async-python` - For asyncio and async patterns\n- `@streaming-apis` - For streaming API integration\n- `@audio-processing`\
+    \ - For audio format conversion and processing\n- `@systematic-debugging` - For debugging complex async pipelines\n\n\
+    ## Resources\n\n**Libraries**:\n- `asyncio` - Async programming\n- `websockets` - WebSocket client/server\n- `FastAPI`\
+    \ - WebSocket server framework\n- `pydub` - Audio manipulation\n- `numpy` - Audio data processing\n\n**API Providers**:\n\
+    - Transcription: Deepgram, AssemblyAI, Azure Speech, Google Cloud Speech\n- LLM: OpenAI, Google Gemini, Anthropic Claude\n\
+    - TTS: ElevenLabs, Azure TTS, Google Cloud TTS, Amazon Polly, Play.ht\n\n## Summary\n\nBuilding a voice AI engine requires:\n\
+    - ✅ Async worker pipeline for concurrent processing\n- ✅ Queue-based communication between components\n- ✅ Streaming at\
+    \ every stage (transcription, LLM, synthesis)\n- ✅ Interrupt system for natural conversations\n- ✅ Rate limiting for real-time\
+    \ audio playback\n- ✅ Multi-provider support for flexibility\n- ✅ Proper error handling and graceful shutdown\n\n**The\
+    \ key insight**: Everything must stream and everything must be interruptible for natural, real-time conversations."
+edges:
+- to: voice-agents
+  type: collaborates_with
+- to: voice-ai-development
+  type: collaborates_with
+- to: llm-application-dev-ai-assistant
+  type: collaborates_with
